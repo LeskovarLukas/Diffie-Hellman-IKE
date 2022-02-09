@@ -1,0 +1,7 @@
+ ** [0.0.1] - 2022-02-09
+ *** Added
+ - Create repository
+ - Instantiate given template
+ - Fill .gitignore
+ - Create doc folder
+ - Add paper template

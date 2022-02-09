@@ -36,5 +36,6 @@
 .idea
 
 # build directory
+builddir
 build/*
 !build/.gitkeep
