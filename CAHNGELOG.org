@@ -1,5 +1,11 @@
+*** Changed
+** [0.0.3] - 2022-02-15
+- Proxy now implements message stream 
 *** Added
+** [0.0.2] - 2022-02-14
 - Basic implementation of Diffie-Hellman key exchange
+- Base for client/server architecture
+- ProxyClass for message passing
 ** [0.0.1] - 2022-02-09
 *** Added
 - Create repository
