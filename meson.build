@@ -1,4 +1,3 @@
-# uncomment as necessary
 project('leskovar_project', 'cpp',
         license : ['Boost'],
         version : '0.1',
@@ -7,12 +6,12 @@ project('leskovar_project', 'cpp',
 thread_dep = dependency('threads')
 
 # begin asio: https://think-async.com/Asio/
-#add_global_arguments('-I' + get_option('asio_include_dir'), language : 'cpp')
-#add_global_arguments('-DASIO_STANDALONE', language : 'cpp')
-#add_global_arguments('-DASIO_NO_DEPRECATED', language : 'cpp')
+add_global_arguments('-I' + get_option('asio_include_dir'), language : 'cpp')
+add_global_arguments('-DASIO_STANDALONE', language : 'cpp')
+add_global_arguments('-DASIO_NO_DEPRECATED', language : 'cpp')
 # end asio
 
-# ap: https://github.com/faheel/BigInt
+# BigInt: https://github.com/faheel/BigInt
 add_global_arguments('-I' + get_option('bigint_include_dir'), language : 'cpp')
 
 # CLI11: https://github.com/CLIUtils/CLI11
@@ -25,28 +24,19 @@ add_global_arguments('-I' + get_option('bigint_include_dir'), language : 'cpp')
 add_global_arguments('-I' + get_option('json_include_dir'), language : 'cpp')
 
 
-
-# # begin protobuf: https://developers.google.com/protocol-buffers/
-# # protobuf: must be installed independently and has to be found...
-# protoc = find_program('protoc', required : true)
-# protobuf_dep = dependency('protobuf', required : true)
-
-# gen = generator(protoc, \
-#   output    : ['@BASENAME@.pb.cc', '@BASENAME@.pb.h'],
-#   arguments : ['--proto_path=@CURRENT_SOURCE_DIR@/src', '--cpp_out=@BUILD_DIR@', '@PLAINNAME@'])
-
-# # change proto file accordingly
-# generated = gen.process('src/dummy.proto')
-# # end protobuf
-
-# subdir('SUBDIR1')
-
 inc_dir = include_directories('include')
-src = ['src/main.cpp']
-#protobuf: src = ['src/main.cpp', generated]
+client_src = ['src/tls_client/main.cpp']
+server_src = ['src/tls_server/main.cpp']
 
-executable('tls',
-           sources : src,
-           include_directories : inc_dir,
-           dependencies : [thread_dep] #, protobuf_dep]
-          )
+
+executable('tls_client',
+           sources: client_src,
+           include_directories: inc_dir,
+           dependencies: [thread_dep]
+          )   
+
+executable('tls_server',
+           sources: server_src,
+           include_directories: inc_dir,
+           dependencies: [thread_dep]
+          )    

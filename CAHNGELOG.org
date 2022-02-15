@@ -1,7 +1,9 @@
- ** [0.0.1] - 2022-02-09
- *** Added
- - Create repository
- - Instantiate given template
- - Fill .gitignore
- - Create doc folder
- - Add paper template
+*** Added
+- Basic implementation of Diffie-Hellman key exchange
+** [0.0.1] - 2022-02-09
+*** Added
+- Create repository
+- Instantiate given template
+- Fill .gitignore
+- Create doc folder
+- Add paper template
