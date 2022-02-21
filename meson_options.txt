@@ -14,7 +14,7 @@ option('json_include_dir', type : 'string', value : '/home/lessi/nlohoman/', des
 option('magic_enum_include_dir', type : 'string', value : '', description : 'the dir containing magic_enum.hpp')
 option('pprint_include_dir', type : 'string', value : '', description : 'the dir containing pprint.hpp')
 option('rang_include_dir', type : 'string', value : '', description : 'the dir containing rang.hpp')
-option('spdlog_include_dir', type : 'string', value : '', description : 'the include dir of spdlog')
+option('spdlog_include_dir', type : 'string', value : '/home/lessi/spdlog-1.9.2/include', description : 'the include dir of spdlog')
 option('sml_include_dir', type : 'string', value : '', description : 'the dir containing sml.hpp')
 option('tabulate_include_dir', type : 'string', value : '', description : 'the dir containing tabulate.hpp')
 option('taskflow_include_dir', type : 'string', value : '', description : 'the dir containing the dir taskflow')

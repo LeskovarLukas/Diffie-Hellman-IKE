@@ -1,3 +1,7 @@
+*** Added
+** [0.0.4] - 2022-02-21
+- Diffie Hellman Key Exchange now between client and server
+- Logging now with spdlog
 *** Changed
 ** [0.0.3] - 2022-02-15
 - Proxy now implements message stream 

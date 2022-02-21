@@ -6,13 +6,12 @@
 class Pipe {
 private:
     asio::ip::tcp::iostream stream;
+    bool closed = false;
 
 public:
-    Pipe(const std::string& host="localhost", const std::string& port="4433"): stream{host, port} { 
-    }
+    Pipe(const std::string& host="localhost", const std::string& port="4433"): stream{host, port} {}
 
-    Pipe(asio::ip::tcp::socket socket): stream{std::move(socket)} {
-    }
+    Pipe(asio::ip::tcp::socket socket): stream{std::move(socket)} {}
 
     ~Pipe() {
         this->stream.close();
@@ -20,7 +19,7 @@ public:
 
     Pipe& operator<<(const std::string& message) {
         if (stream) {
-            stream << message;
+            stream << message << std::endl;
         } else {
             throw std::runtime_error("Pipe: stream is not connected");
         }
@@ -29,7 +28,7 @@ public:
 
     Pipe& operator>>(std::string& message) {
         if (stream) {
-            stream >> message;
+            getline(stream, message);
         } else {
             throw std::runtime_error("Pipe: stream is not connected");
         }
