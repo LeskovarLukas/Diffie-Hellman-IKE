@@ -1,1 +1,13 @@
 # leskovar_project
+[![wakatime](https://wakatime.com/badge/github/LeskovarLukas/leskovar_project.svg)](https://wakatime.com/badge/github/LeskovarLukas/leskovar_project)
+
+Simple project simulating TLS (I guess its Version 1.0)
+
+Libraries in use:
+- [Asio](https://think-async.com/Asio/)
+- [BigInt](https://github.com/faheel/BigInt)
+- [CLI11](https://github.com/CLIUtils/CLI11)
+- [spdlog](https://github.com/gabime/spdlog)
+- [Nlohoman JSON](https://github.com/nlohmann/json)
+
+For version history see [Changelog](https://github.com/LeskovarLukas/leskovar_project/blob/main/CAHNGELOG.org)
