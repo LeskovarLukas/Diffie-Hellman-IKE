@@ -9,5 +9,6 @@ Libraries in use:
 - [CLI11](https://github.com/CLIUtils/CLI11)
 - [spdlog](https://github.com/gabime/spdlog)
 - [Nlohoman JSON](https://github.com/nlohmann/json)
+- [PicoSHA2](https://github.com/okdshin/PicoSHA2)
 
 For version history see [Changelog](https://github.com/LeskovarLukas/leskovar_project/blob/main/CAHNGELOG.org)
