@@ -39,3 +39,6 @@
 builddir
 build/*
 !build/.gitkeep
+
+# Misc
+.DS_Store
