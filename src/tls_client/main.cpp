@@ -2,6 +2,7 @@
 #include <vector>
 #include <BigInt.hpp>
 #include <spdlog/spdlog.h>
+#include <picosha2.h>
 
 
 #include "include/pipe.h"
@@ -16,7 +17,6 @@ int main() {
 
     std::string message;
     pipe >> message;
-    spdlog::debug("Message: {}" + message);
 
     std::vector<std::string> parameters;
     split_message(message, parameters);
@@ -24,14 +24,18 @@ int main() {
     BigInt G = parameters[0];
     BigInt P = parameters[1];
     BigInt S = parameters[2];
-    int c = 5;
+    spdlog::debug("Received S: {}", S.to_string());
+    int c = 2;
     BigInt C = pow(G, c) % P;
-    spdlog::debug("C: {}", C.to_string());
+    spdlog::debug("Sending C: {}", C.to_string());
 
     pipe << "C_" + C.to_string();
 
     BigInt K = pow(S, c) % P;
     spdlog::info("Key: {}", K.to_string());
+
+    std::string hash_hex_str = picosha2::hash256_hex_string(K.to_string());
+    spdlog::info("Hash: {}", hash_hex_str);
 
     return 0;
 }

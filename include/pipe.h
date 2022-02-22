@@ -6,7 +6,6 @@
 class Pipe {
 private:
     asio::ip::tcp::iostream stream;
-    bool closed = false;
 
 public:
     Pipe(const std::string& host="localhost", const std::string& port="4433"): stream{host, port} {}

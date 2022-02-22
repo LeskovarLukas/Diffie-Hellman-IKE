@@ -42,15 +42,15 @@ int main() {
                 json primes;
                 read_primes_json("../modp_primes.json", primes, G, P);
 
-                int s = 3;
+                int s = 1;
                 BigInt S = pow(G, s) % P;
-                spdlog::debug("S: {}", S.to_string());
+                spdlog::debug("Sending S: {}", S.to_string());
 
                 pipe << "G_" + G.to_string() + "|P_" + P.to_string() + "|S_" + S.to_string();
 
                 pipe >> message;
-                spdlog::debug("Message: {}", message);
                 BigInt C = BigInt(message.substr(2));
+                spdlog::debug("Received C: {}", C.to_string());
 
                 BigInt K = pow(C, s) % P;
                 spdlog::info("Key: {}", K.to_string());
