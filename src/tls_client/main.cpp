@@ -6,6 +6,7 @@
 
 
 #include "include/pipe.h"
+#include "include/aes_utility.h"
 
 void split_message(std::string, std::vector<std::string>&);
 
@@ -34,9 +35,12 @@ int main() {
     BigInt K = pow(S, c) % P;
     spdlog::info("Key: {}", K.to_string());
 
-    std::string hash_hex_str = picosha2::hash256_hex_string(K.to_string());
-    spdlog::info("Hash: {}", hash_hex_str);
-
+    unsigned long size;
+    std::string encrypted_message = Crypto_Utility::encrypt("Hello World", K.to_string(), size);
+    spdlog::info("Encrypted message: {}", encrypted_message);
+    
+    std::string decrypted_message = Crypto_Utility::decrypt(encrypted_message, K.to_string(), size);
+    spdlog::info("Decrypted message: {}", decrypted_message);
     return 0;
 }
 

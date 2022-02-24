@@ -22,3 +22,4 @@ option('spdlog_include_dir', type : 'string', value : '/home/lessi/spdlog-1.9.2/
 # option('tfile_include_dir', type : 'string', value : '', description : 'the dir containing tfile.h')
 # option('sqlite_orm_include_dir', type : 'string', value : '', description : 'the dir containing sqlite_orm.h')
 option('picosha2_include_dir', type : 'string', value : '/home/lessi/PicoSHA2-1.0.0/', description : 'the dir containing picosha2.h')
+option('plusaes_include_dir', type : 'string', value : '/home/lessi/plusaes-0.10.0/include/', description : 'the dir containing plusaes.h')

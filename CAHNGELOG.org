@@ -1,12 +1,13 @@
-*** Added
 ** [0.0.4] - 2022-02-21
+*** Added
+- Testing symmetric encryption/decryption 
 - Diffie Hellman Key Exchange now between client and server
 - Logging now with spdlog
-*** Changed
 ** [0.0.3] - 2022-02-15
-- Proxy now implements message stream 
+*** Changed
+- Proxy now implements message stream
+** [0.0.2] - 2022-02-14 
 *** Added
-** [0.0.2] - 2022-02-14
 - Basic implementation of Diffie-Hellman key exchange
 - Base for client/server architecture
 - ProxyClass for message passing

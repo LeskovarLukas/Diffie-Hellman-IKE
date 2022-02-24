@@ -26,6 +26,8 @@ add_global_arguments('-I' + get_option('json_include_dir'), language : 'cpp')
 # PicoSHA2: https://github.com/okdshin/PicoSHA2
 add_global_arguments('-I' + get_option('picosha2_include_dir'), language : 'cpp')
 
+# plusaes: https://github.com/kkAyataka/plusaes
+add_global_arguments('-I' + get_option('plusaes_include_dir'), language : 'cpp')
 
 inc_dir = include_directories('include')
 client_src = ['src/tls_client/main.cpp']
