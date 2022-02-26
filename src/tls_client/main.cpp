@@ -2,11 +2,10 @@
 #include <vector>
 #include <BigInt.hpp>
 #include <spdlog/spdlog.h>
-#include <picosha2.h>
 
 
 #include "include/pipe.h"
-#include "include/aes_utility.h"
+#include "include/crypto_utility.h"
 
 void split_message(std::string, std::vector<std::string>&);
 
@@ -35,12 +34,12 @@ int main() {
     BigInt K = pow(S, c) % P;
     spdlog::info("Key: {}", K.to_string());
 
-    unsigned long size;
-    std::string encrypted_message = Crypto_Utility::encrypt("Hello World", K.to_string(), size);
-    spdlog::info("Encrypted message: {}", encrypted_message);
+    Crypto_Utility crypto_utility(K.to_string());
+    std::string encrypted = crypto_utility.encrypt("Hello world!");
+
+    pipe << "SIZE_" + std::to_string(crypto_utility.get_size()) + 
+    "|" + "MSG_" + encrypted;
     
-    std::string decrypted_message = Crypto_Utility::decrypt(encrypted_message, K.to_string(), size);
-    spdlog::info("Decrypted message: {}", decrypted_message);
     return 0;
 }
 

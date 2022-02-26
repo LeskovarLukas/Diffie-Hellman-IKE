@@ -12,18 +12,22 @@
 class Crypto_Utility
 {
 private:
-    static const unsigned char iv[16];
+    unsigned char iv[16] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
+    std::vector<unsigned char> key = std::vector<unsigned char>(32);
+    unsigned long size;
 
 public:
-    static std::string encrypt(const std::string& message, const std::string& key, unsigned long& encrypted_size) {
-        std::vector<unsigned char> key_bytes(32);
-        picosha2::hash256(key.begin(), key.end(), key_bytes);
+    Crypto_Utility(const std::string& key_string) {
+        picosha2::hash256(key_string.begin(), key_string.end(), this->key);
+    }
 
-        encrypted_size = plusaes::get_padded_encrypted_size(message.size());
-        std::vector<unsigned char> encrypted(encrypted_size);
+    std::string encrypt(const std::string& message) {
+        size = plusaes::get_padded_encrypted_size(message.size());
+        std::vector<unsigned char> encrypted(size);
+
         plusaes::encrypt_cbc(
             (unsigned char*)message.data(), message.size(), 
-            &key_bytes[0], key_bytes.size(), 
+            &key[0], key.size(), 
             &iv, 
             &encrypted[0], encrypted.size(), 
             true
@@ -32,16 +36,13 @@ public:
         return std::string(encrypted.begin(), encrypted.end());    
     }
 
-    static std::string decrypt(const std::string& message, const std::string& key, unsigned long& encrypted_size) {
-        std::vector<unsigned char> key_bytes(32);
-        picosha2::hash256(key.begin(), key.end(), key_bytes);
-
+    std::string decrypt(const std::string& message) {
         unsigned long padded_size = 0;
         std::vector<unsigned char> encrypted(message.begin(), message.end());
-        std::vector<unsigned char> decrypted(encrypted_size);
+        std::vector<unsigned char> decrypted(size);
         plusaes::decrypt_cbc(
             &encrypted[0], encrypted.size(), 
-            &key_bytes[0], key_bytes.size(), 
+            &key[0], key.size(), 
             &iv, 
             &decrypted[0], decrypted.size(), 
             &padded_size
@@ -49,9 +50,22 @@ public:
 
         return std::string(decrypted.begin(), decrypted.end());    
     }
+
+    unsigned long get_size() const {
+        return size;
+    }
+
+    void set_size(unsigned long size) {
+        this->size = size;
+    }
+
+    std::string get_iv() const {
+        return std::string(iv, iv + sizeof iv / sizeof iv[0]);
+
+    }
+
+    void set_iv(const std::string& iv_string) {
+        std::copy(iv_string.begin(), iv_string.end(), iv);
+    }
 };
 
-const unsigned char Crypto_Utility::iv[16] = {
-    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 
-    0x08, 0x09,0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f
-};

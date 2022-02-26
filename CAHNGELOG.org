@@ -1,3 +1,5 @@
+** Changed
+- Sending and receiving of encrypted messages
 ** [0.0.4] - 2022-02-21
 *** Added
 - Testing symmetric encryption/decryption 

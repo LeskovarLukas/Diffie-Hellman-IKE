@@ -7,11 +7,15 @@
 
 
 #include "include/pipe.h"
+#include "crypto_utility.h"
 
 using json = nlohmann::json;
 
 
 void read_primes_json(std::string, json&, BigInt&, BigInt&);
+
+void split_message(std::string, std::vector<std::string>&);
+
 
 int main() {
     asio::io_context io_context;
@@ -54,6 +58,16 @@ int main() {
 
                 BigInt K = pow(C, s) % P;
                 spdlog::info("Key: {}", K.to_string());
+
+                Crypto_Utility crypto_utility(K.to_string());
+                pipe >> message;
+                spdlog::debug("Message: {}", message);
+                std::vector<std::string> parts;
+                split_message(message, parts);
+                crypto_utility.set_size(std::stoi(parts[0]));
+                std::string decrypted_message = crypto_utility.decrypt(parts[1]);
+
+                spdlog::info("Decrypted message: {}", decrypted_message);
             }
         }
     } catch (std::exception& e) {
@@ -73,4 +87,13 @@ void read_primes_json(std::string filename, json& j, BigInt& g, BigInt& p) {
     file.close();
     g = int(j["groups"][0]["g"]); 
     p = std::string(j["groups"][0]["p_dec"]);
+}
+
+void split_message(std::string message, std::vector<std::string>& parts) {
+    std::stringstream ss(message);
+    std::string part;
+    while (std::getline(ss, part, '|')) {
+        part = part.substr(part.find_first_of("_") + 1);
+        parts.push_back(part);
+    }
 }
