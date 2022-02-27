@@ -58,10 +58,5 @@ public:
     void set_size(unsigned long size) {
         this->size = size;
     }
-
-    static BigInt generate_random_number(BigInt min, BigInt max) {
-        int randomData = open("/dev/urandom", O_RDONLY);
-        return (randomData % (max - min + 1)) + min;
-    }
 };
 

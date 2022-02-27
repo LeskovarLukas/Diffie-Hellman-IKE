@@ -8,13 +8,12 @@
 
 #include "include/pipe.h"
 #include "crypto_utility.h"
+#include "utility.h"
 
 using json = nlohmann::json;
 
 
 void read_primes_json(std::string, json&, BigInt&, BigInt&);
-
-void split_message(std::string, std::vector<std::string>&);
 
 
 int main() {
@@ -46,7 +45,7 @@ int main() {
                 json primes;
                 read_primes_json("../modp_primes.json", primes, G, P);
 
-                BigInt s = Crypto_Utility::generate_random_number(1, P);
+                BigInt s = generate_random_number(1, P);
                 BigInt S = pow(G, s.to_int()) % P;
                 spdlog::debug("Sending S: {}", S.to_string());
 
@@ -87,13 +86,4 @@ void read_primes_json(std::string filename, json& j, BigInt& g, BigInt& p) {
     file.close();
     g = int(j["groups"][0]["g"]); 
     p = std::string(j["groups"][0]["p_dec"]);
-}
-
-void split_message(std::string message, std::vector<std::string>& parts) {
-    std::stringstream ss(message);
-    std::string part;
-    while (std::getline(ss, part, '|')) {
-        part = part.substr(part.find_first_of("_") + 1);
-        parts.push_back(part);
-    }
 }

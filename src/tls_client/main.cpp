@@ -6,8 +6,7 @@
 
 #include "include/pipe.h"
 #include "include/crypto_utility.h"
-
-void split_message(std::string, std::vector<std::string>&);
+#include "utility.h"
 
 int main() {
     spdlog::set_level(spdlog::level::debug);
@@ -25,7 +24,7 @@ int main() {
     BigInt P = parameters[1];
     BigInt S = parameters[2];
     spdlog::debug("Received S: {}", S.to_string());
-    BigInt c = Crypto_Utility::generate_random_number(1, P);
+    BigInt c = generate_random_number(1, P);
     BigInt C = pow(G, c.to_int()) % P;
     spdlog::debug("Sending C: {}", C.to_string());
 
@@ -41,13 +40,4 @@ int main() {
     "|" + "MSG_" + encrypted;
     
     return 0;
-}
-
-void split_message(std::string message, std::vector<std::string>& parts) {
-    std::stringstream ss(message);
-    std::string part;
-    while (std::getline(ss, part, '|')) {
-        part = part.substr(2);
-        parts.push_back(part);
-    }
 }
