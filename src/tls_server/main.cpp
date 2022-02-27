@@ -66,6 +66,7 @@ int main() {
                 split_message(message, parts);
                 crypto_utility.set_size(std::stoi(parts[0]));
                 std::string decrypted_message = crypto_utility.decrypt(parts[1]);
+                crypto_utility.set_iv(parts[2]);
 
                 spdlog::info("Decrypted message: {}", decrypted_message);
             }

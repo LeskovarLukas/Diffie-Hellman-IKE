@@ -35,10 +35,11 @@ int main() {
     spdlog::info("Key: {}", K.to_string());
 
     Crypto_Utility crypto_utility(K.to_string());
-    std::string encrypted = crypto_utility.encrypt("Hello world!");
+    std::string encrypted = crypto_utility.encrypt("Hello world!Hello world!Hello world!");
 
     pipe << "SIZE_" + std::to_string(crypto_utility.get_size()) + 
-    "|" + "MSG_" + encrypted;
+    "|" + "MSG_" + encrypted +
+    "|" + "IV_" + crypto_utility.get_iv();
     
     return 0;
 }
