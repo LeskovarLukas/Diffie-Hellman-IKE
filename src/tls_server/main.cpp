@@ -46,8 +46,8 @@ int main() {
                 json primes;
                 read_primes_json("../modp_primes.json", primes, G, P);
 
-                int s = 1;
-                BigInt S = pow(G, s) % P;
+                BigInt s = Crypto_Utility::generate_random_number(1, P);
+                BigInt S = pow(G, s.to_int()) % P;
                 spdlog::debug("Sending S: {}", S.to_string());
 
                 pipe << "G_" + G.to_string() + "|P_" + P.to_string() + "|S_" + S.to_string();
@@ -56,7 +56,7 @@ int main() {
                 BigInt C = BigInt(message.substr(2));
                 spdlog::debug("Received C: {}", C.to_string());
 
-                BigInt K = pow(C, s) % P;
+                BigInt K = pow(C, s.to_int()) % P;
                 spdlog::info("Key: {}", K.to_string());
 
                 Crypto_Utility crypto_utility(K.to_string());
@@ -66,7 +66,6 @@ int main() {
                 split_message(message, parts);
                 crypto_utility.set_size(std::stoi(parts[0]));
                 std::string decrypted_message = crypto_utility.decrypt(parts[1]);
-                crypto_utility.set_iv(parts[2]);
 
                 spdlog::info("Decrypted message: {}", decrypted_message);
             }

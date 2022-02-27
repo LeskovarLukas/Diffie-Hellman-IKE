@@ -59,13 +59,9 @@ public:
         this->size = size;
     }
 
-    std::string get_iv() const {
-        return std::string(iv, iv + sizeof iv / sizeof iv[0]);
-
-    }
-
-    void set_iv(const std::string& iv_string) {
-        std::copy(iv_string.begin(), iv_string.end(), iv);
+    static BigInt generate_random_number(BigInt min, BigInt max) {
+        int randomData = open("/dev/urandom", O_RDONLY);
+        return (randomData % (max - min + 1)) + min;
     }
 };
 
