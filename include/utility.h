@@ -81,6 +81,7 @@ std::string decrypt(const std::string& message, unsigned long& size, const std::
 
 /*
 Encoding Utility Functions
+https://gist.github.com/tomykaira/f0fd86b6c73063283afe550bc5d77594
 */
 
 std::string encode_base64(const std::string& message) {
