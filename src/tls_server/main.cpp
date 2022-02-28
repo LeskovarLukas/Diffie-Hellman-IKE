@@ -7,7 +7,6 @@
 
 
 #include "include/pipe.h"
-#include "crypto_utility.h"
 #include "utility.h"
 
 using json = nlohmann::json;
@@ -58,15 +57,18 @@ int main() {
                 BigInt K = pow(C, s.to_int()) % P;
                 spdlog::info("Key: {}", K.to_string());
 
-                Crypto_Utility crypto_utility(K.to_string());
                 pipe >> message;
                 spdlog::debug("Message: {}", message);
+
                 std::vector<std::string> parts;
                 split_message(message, parts);
-                crypto_utility.set_size(std::stoi(parts[0]));
-                std::string decrypted_message = crypto_utility.decrypt(parts[1]);
 
-                spdlog::info("Decrypted message: {}", decrypted_message);
+                std::string encrypted = decode_base64(parts[1]);
+                spdlog::debug("Encrypted: {}", encrypted);
+
+                unsigned long size = std::stoul(parts[0]);
+                std::string decrypted = decrypt(encrypted, size, K.to_string());
+                spdlog::info("Decrypted message: {}", decrypted);
             }
         }
     } catch (std::exception& e) {

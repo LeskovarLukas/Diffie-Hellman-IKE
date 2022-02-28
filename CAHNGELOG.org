@@ -1,5 +1,8 @@
-** Changed
+* Changelog
+** [Unreleased]
+*** Changed
 - Sending and receiving of encrypted messages
+- Removing test program
 ** [0.0.4] - 2022-02-21
 *** Added
 - Testing symmetric encryption/decryption 

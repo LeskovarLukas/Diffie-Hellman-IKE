@@ -5,7 +5,6 @@
 
 
 #include "include/pipe.h"
-#include "include/crypto_utility.h"
 #include "utility.h"
 
 int main() {
@@ -33,11 +32,15 @@ int main() {
     BigInt K = pow(S, c.to_int()) % P;
     spdlog::info("Key: {}", K.to_string());
 
-    Crypto_Utility crypto_utility(K.to_string());
-    std::string encrypted = crypto_utility.encrypt("Hello world!Hello world!Hello world!");
+    std::string text = "Hello World";
+    unsigned long size = 0;
 
-    pipe << "SIZE_" + std::to_string(crypto_utility.get_size()) + 
-    "|" + "MSG_" + encrypted;
+    std::string encrypted = encrypt(text, size, K.to_string());
+    spdlog::debug("Encrypted: {}", encrypted);
+
+    encrypted = encode_base64(encrypted);
+
+    pipe << "SIZE_" + std::to_string(size) + "|" + "MSG_" + encrypted;
     
     return 0;
 }
