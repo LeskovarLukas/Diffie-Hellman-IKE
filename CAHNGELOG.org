@@ -1,5 +1,10 @@
 * Changelog
 ** [Unreleased]
+*** Removed
+- Encryption_Utility class
+*** Added
+- general utility functions
+- base64 encoding/decoding
 *** Changed
 - Sending and receiving of encrypted messages
 - Removing test program
