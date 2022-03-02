@@ -4,7 +4,7 @@
 #include <spdlog/spdlog.h>
 
 
-#include "include/pipe.h"
+#include "pipe.h"
 #include "utility.h"
 
 void establish_secure_connection(Pipe&, BigInt&);
@@ -17,15 +17,16 @@ int main() {
 
     establish_secure_connection(pipe, key);
 
-    std::string message = "Hello World";
-    unsigned long size = 0;
+    std::string input;
+    std::string message;
+    while(std::cin) {
+        std::getline(std::cin, input);
+        if (input != "") {
+            send_message(pipe, key, input);
 
-    std::string encrypted = encrypt(message, size, key.to_string());
-    spdlog::debug("Encrypted: {}", encrypted);
-
-    encrypted = encode_base64(encrypted);
-
-    pipe << "SIZE_" + std::to_string(size) + "|" + "MSG_" + encrypted;
+            //receive_message(pipe, key, message);
+        }
+    }
 
     
     return 0;
@@ -53,3 +54,4 @@ void establish_secure_connection(Pipe& pipe, BigInt& K) {
     K = pow(S, c.to_int()) % P;
     spdlog::info("Key: {}", K.to_string());
 }
+
