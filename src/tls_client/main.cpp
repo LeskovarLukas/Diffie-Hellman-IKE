@@ -20,6 +20,7 @@ int main() {
     std::string input;
     std::string message;
     while(std::cin) {
+        std::cout << "Enter message: ";
         std::getline(std::cin, input);
         if (input != "") {
             send_message(pipe, key, input);

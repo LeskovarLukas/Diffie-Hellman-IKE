@@ -1,13 +1,15 @@
 * Changelog
-** [Unreleased]
+** [0.1.0] - 2022-03-02
 *** Removed
 - Encryption_Utility class
 *** Added
-- general utility functions
-- base64 encoding/decoding
+- General utility functions
+- Base64 encoding/decoding
+- Utility for sending/receiving
 *** Changed
 - Sending and receiving of encrypted messages
 - Removing test program
+- Cleaning up structure
 ** [0.0.4] - 2022-02-21
 *** Added
 - Testing symmetric encryption/decryption 
