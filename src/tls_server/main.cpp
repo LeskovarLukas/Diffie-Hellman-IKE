@@ -14,6 +14,8 @@ using json = nlohmann::json;
 
 void read_primes_json(std::string, json&, BigInt&, BigInt&);
 
+void establish_secure_connection(Pipe&, BigInt&);
+
 
 int main() {
     asio::io_context io_context;
@@ -34,28 +36,13 @@ int main() {
             acceptor.accept(socket);
             spdlog::info("Connection accepted");
             Pipe pipe{std::move(socket)};
+            BigInt key;
 
             pipe >> message;
             spdlog::debug("Message: {}", message);
             
             if (message == "TLS_DHE") {
-                BigInt G;
-                BigInt P;
-                json primes;
-                read_primes_json("../modp_primes.json", primes, G, P);
-
-                BigInt s = generate_random_number(1, P);
-                BigInt S = pow(G, s.to_int()) % P;
-                spdlog::debug("Sending S: {}", S.to_string());
-
-                pipe << "G_" + G.to_string() + "|P_" + P.to_string() + "|S_" + S.to_string();
-
-                pipe >> message;
-                BigInt C = BigInt(message.substr(2));
-                spdlog::debug("Received C: {}", C.to_string());
-
-                BigInt K = pow(C, s.to_int()) % P;
-                spdlog::info("Key: {}", K.to_string());
+                establish_secure_connection(pipe, key);
 
                 pipe >> message;
                 spdlog::debug("Message: {}", message);
@@ -67,7 +54,7 @@ int main() {
                 spdlog::debug("Encrypted: {}", encrypted);
 
                 unsigned long size = std::stoul(parts[0]);
-                std::string decrypted = decrypt(encrypted, size, K.to_string());
+                std::string decrypted = decrypt(encrypted, size, key.to_string());
                 spdlog::info("Decrypted message: {}", decrypted);
             }
         }
@@ -88,4 +75,26 @@ void read_primes_json(std::string filename, json& j, BigInt& g, BigInt& p) {
     file.close();
     g = int(j["groups"][0]["g"]); 
     p = std::string(j["groups"][0]["p_dec"]);
+}
+
+
+void establish_secure_connection(Pipe& pipe, BigInt& K) {
+    BigInt G;
+    BigInt P;
+    json primes;
+    read_primes_json("../modp_primes.json", primes, G, P);
+
+    BigInt s = generate_random_number(1, P);
+    BigInt S = pow(G, s.to_int()) % P;
+    spdlog::debug("Sending S: {}", S.to_string());
+
+    pipe << "G_" + G.to_string() + "|P_" + P.to_string() + "|S_" + S.to_string();
+
+    std::string message;
+    pipe >> message;
+    BigInt C = BigInt(message.substr(2));
+    spdlog::debug("Received C: {}", C.to_string());
+
+    K = pow(C, s.to_int()) % P;
+    spdlog::info("Key: {}", K.to_string());
 }
