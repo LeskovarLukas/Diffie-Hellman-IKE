@@ -13,22 +13,18 @@ int main() {
     spdlog::set_level(spdlog::level::debug);
     spdlog::info("Initiating key exchange");
     Pipe pipe;
-    BigInt key;
+    BigInt key = -1;
 
-    establish_secure_connection(pipe, key);
-
-    std::string input;
-    std::string message;
-    while(std::cin) {
-        std::cout << "Enter message: ";
-        std::getline(std::cin, input);
-        if (input != "") {
-            send_message(pipe, key, input);
-
-            //receive_message(pipe, key, message);
+    while (pipe) {  
+        if (key == -1) {
+            establish_secure_connection(pipe, key);
+        } else {
+            std::string input;
+            std::cout << "Enter message: ";
+            std::getline(std::cin, input);
+            pipe << send_message(key, input);
         }
     }
-
     
     return 0;
 }

@@ -1,4 +1,7 @@
 * Changelog
+** [0.1.1] - Unreleased
+*** Changed
+- Client/Server cleanup
 ** [0.1.0] - 2022-03-02
 *** Removed
 - Encryption_Utility class

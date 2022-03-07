@@ -177,28 +177,25 @@ std::string decode_base64(const std::string& message) {
 Messaging Functions
 */
 
-void send_message(Pipe& pipe, BigInt& key, std::string& message) {
+std::string send_message(BigInt& key, std::string& message) {
     unsigned long size = 0;
     std::string encrypted = encrypt(message, size, key.to_string());
     spdlog::debug("Sending Encrypted: {}", encrypted);
 
     encrypted = encode_base64(encrypted);
 
-    pipe << "SIZE_" + std::to_string(size) + "|" + "MSG_" + encrypted;
+    return "SIZE_" + std::to_string(size) + "|" + "MSG_" + encrypted;
 }
 
 
-void receive_message(Pipe& pipe, BigInt& key, std::string& message) {
-    std::string encrypted;
-    pipe >> encrypted;
-
+std::string receive_message(BigInt& key, std::string& message) {
     std::vector<std::string> parts;
-    split_message(encrypted, parts);
+    split_message(message, parts);
 
     unsigned long size = std::stoul(parts[0]);
-    std::string decrypted = decode_base64(parts[1]);
-    spdlog::debug("Received Encrypted: {}", decrypted);
+    std::string encrypted = decode_base64(parts[1]);
+    spdlog::debug("Received Encrypted: {}", encrypted);
 
-    message = decrypt(decrypted, size, key.to_string());
-    spdlog::info("Received Decrypted: {}", message);
+    std::string decrypted = decrypt(encrypted, size, key.to_string());
+    return decrypted;
 }

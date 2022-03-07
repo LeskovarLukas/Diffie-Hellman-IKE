@@ -22,15 +22,12 @@ void handle_socket(Pipe&);
 int main() {
     asio::io_context io_context;
     asio::ip::tcp::endpoint endpoint{asio::ip::tcp::v4(), 4433};
+    asio::ip::tcp::acceptor acceptor{io_context, endpoint};
+    asio::ip::tcp::socket socket{io_context};
+    
     spdlog::set_level(spdlog::level::debug);
-
-    std::string message;
-
-
+ 
     try {
-        asio::ip::tcp::acceptor acceptor{io_context, endpoint};
-        asio::ip::tcp::socket socket{io_context};
-
         spdlog::info("Waiting for connections");
         acceptor.listen();
 
@@ -42,9 +39,9 @@ int main() {
             handle_socket(pipe);
         }
     } catch (std::exception& e) {
-        std::cerr << e.what() << std::endl;
+        spdlog::error(e.what());
     }
-
+    acceptor.close();
     return 0;
 }
 
@@ -86,12 +83,16 @@ void establish_secure_connection(Pipe& pipe, BigInt& K) {
 void handle_socket(Pipe& pipe) {
     BigInt key = -1;
     std::string message;
-    pipe >> message;
-    
-    if (message == "TLS_DHE") {
-        establish_secure_connection(pipe, key);
-    }
-    while (message != "") {
-        receive_message(pipe, key, message);
+
+    while (pipe) {
+        pipe >> message;
+
+        if (message == "TLS_DHE") {
+            spdlog::info("Establishing secure connection");
+            establish_secure_connection(pipe, key);
+        } else {
+            message = receive_message(key, message);
+            spdlog::info("Received message: {}", message);
+        }
     }
 }
