@@ -84,15 +84,19 @@ void handle_socket(Pipe& pipe) {
     BigInt key = -1;
     std::string message;
 
-    while (pipe) {
-        pipe >> message;
+    try {
+        while (pipe) {
+            pipe >> message;
 
-        if (message == "TLS_DHE") {
-            spdlog::info("Establishing secure connection");
-            establish_secure_connection(pipe, key);
-        } else {
-            message = receive_message(key, message);
-            spdlog::info("Received message: {}", message);
+            if (message == "TLS_DHE") {
+                spdlog::info("Establishing secure connection");
+                establish_secure_connection(pipe, key);
+            } else if (message != "") {
+                message = receive_message(key, message);
+                spdlog::info("Received message: {}", message);
+            }
         }
+    } catch (std::exception& e) {
+        spdlog::error("Client communication failed!");
     }
 }
