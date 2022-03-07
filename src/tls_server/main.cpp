@@ -91,7 +91,10 @@ void handle_socket(Pipe& pipe) {
             if (message == "TLS_DHE") {
                 spdlog::info("Establishing secure connection");
                 establish_secure_connection(pipe, key);
-            } else if (message != "") {
+            } else if (message == "") {
+                spdlog::info("Connection closed by Client");
+                return;
+            } else {
                 message = receive_message(key, message);
                 spdlog::info("Received message: {}", message);
             }

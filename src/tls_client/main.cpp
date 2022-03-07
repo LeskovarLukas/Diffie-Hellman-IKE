@@ -11,12 +11,12 @@ void establish_secure_connection(Pipe&, BigInt&);
 
 int main() {
     spdlog::set_level(spdlog::level::debug);
-    spdlog::info("Initiating key exchange");
     Pipe pipe;
     BigInt key = -1;
 
     while (pipe) {  
         if (key == -1) {
+            spdlog::info("Initiating key exchange");
             establish_secure_connection(pipe, key);
         } else {
             std::string input;
