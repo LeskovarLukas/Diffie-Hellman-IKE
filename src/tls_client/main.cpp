@@ -11,19 +11,45 @@ void establish_secure_connection(Pipe&, BigInt&);
 
 int main() {
     spdlog::set_level(spdlog::level::debug);
-    Pipe pipe;
-    BigInt key = -1;
 
-    while (pipe) {  
-        if (key == -1) {
-            spdlog::info("Initiating key exchange");
-            establish_secure_connection(pipe, key);
-        } else {
-            std::string input;
-            std::cout << "Enter message: ";
-            std::getline(std::cin, input);
-            pipe << send_message(key, input);
+    try {
+        Pipe pipe;
+        BigInt key = -1;
+    
+        while (true) {  
+            try {
+                if (key == -1) {
+                    spdlog::info("Initiating key exchange");
+                    establish_secure_connection(pipe, key);
+                } else {
+                    std::string input;
+                    std::cout << "Enter message: ";
+                    std::getline(std::cin, input);
+                    pipe << send_message(key, input);
+                }
+            } catch (std::exception& e) {
+                spdlog::warn(e.what());
+
+                if (!pipe) {
+                    spdlog::info("Trying to reconnect");
+                    for (int i = 0; i < 10; i++) {
+                        try {
+                            pipe.try_reconnect();
+                            key = -1;
+                            spdlog::info("Reconnected");
+                            break;
+                        } catch (std::exception& e) {
+                            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                            if (i == 9) {
+                                throw std::runtime_error("Could not reconnect");
+                            }
+                        }
+                    }
+                }
+            }
         }
+    } catch (std::exception& e) {
+        spdlog::error(e.what());
     }
     
     return 0;

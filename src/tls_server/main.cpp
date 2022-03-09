@@ -16,7 +16,7 @@ void read_primes_json(std::string, json&, BigInt&, BigInt&);
 
 void establish_secure_connection(Pipe&, BigInt&);
 
-void handle_socket(Pipe&);
+void handle_socket(asio::ip::tcp::socket&);
 
 
 int main() {
@@ -34,9 +34,8 @@ int main() {
         while (true) {
             acceptor.accept(socket);
             spdlog::info("Connection accepted");
-            Pipe pipe{std::move(socket)};
             
-            handle_socket(pipe);
+            handle_socket(socket);
         }
     } catch (std::exception& e) {
         spdlog::error(e.what());
@@ -80,26 +79,32 @@ void establish_secure_connection(Pipe& pipe, BigInt& K) {
     spdlog::info("Key: {}", K.to_string());
 }
 
-void handle_socket(Pipe& pipe) {
+void handle_socket(asio::ip::tcp::socket& socket) {
     BigInt key = -1;
     std::string message;
 
     try {
-        while (pipe) {
-            pipe >> message;
+        Pipe pipe{std::move(socket)};
 
-            if (message == "TLS_DHE") {
-                spdlog::info("Establishing secure connection");
-                establish_secure_connection(pipe, key);
-            } else if (message == "") {
-                spdlog::info("Connection closed by Client");
-                return;
-            } else {
-                message = receive_message(key, message);
-                spdlog::info("Received message: {}", message);
+        while (true) {
+            try {
+                pipe >> message;
+                spdlog::debug("Message Raw: {}", message); 
+                
+                if (message == "TLS_DHE") {
+                    spdlog::info("Establishing secure connection");
+                    establish_secure_connection(pipe, key);
+                } else {
+                    message = receive_message(key, message);
+                    spdlog::info("Received message: {}", message);
+                } 
+            } catch (std::exception& e) {
+                if (!pipe) 
+                    throw std::runtime_error("Pipe connection lost");
             }
         }
     } catch (std::exception& e) {
-        spdlog::error("Client communication failed!");
+        spdlog::error(e.what());
     }
+    spdlog::info("Closing client connection");
 }

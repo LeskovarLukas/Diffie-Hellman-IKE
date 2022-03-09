@@ -1,5 +1,7 @@
 * Changelog
 ** [0.1.1] - Unreleased
+*** Added
+- Error handling
 *** Changed
 - Client/Server cleanup
 ** [0.1.0] - 2022-03-02

@@ -178,6 +178,9 @@ Messaging Functions
 */
 
 std::string send_message(BigInt& key, std::string& message) {
+    if (message == "") {
+        throw std::runtime_error("Message empty!");
+    }
     unsigned long size = 0;
     std::string encrypted = encrypt(message, size, key.to_string());
     spdlog::debug("Sending Encrypted: {}", encrypted);
@@ -189,6 +192,9 @@ std::string send_message(BigInt& key, std::string& message) {
 
 
 std::string receive_message(BigInt& key, std::string& message) {
+    if (message == "") {
+        throw std::runtime_error("Message empty!");
+    }
     std::vector<std::string> parts;
     split_message(message, parts);
 
