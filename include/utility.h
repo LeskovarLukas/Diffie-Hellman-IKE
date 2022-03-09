@@ -5,12 +5,12 @@
 #include <vector>
 #include <fstream>
 
-#include <BigInt.hpp>
-#include <picosha2.h>
+#include "BigInt/BigInt.hpp"
+#include "PicoSHA2/picosha2.h"
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-compare"
-#include <plusaes/plusaes.hpp>
+#include "plusaes/plusaes.hpp"
 #pragma GCC diagnostic pop
 
 #include "pipe.h"

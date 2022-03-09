@@ -1,5 +1,4 @@
 option('asio_include_dir', type : 'string', value : '/home/lessi/asio/include/', description : 'the include dir of asio')
-option('bigint_include_dir', type : 'string', value : '/home/lessi/bigInt/', description : 'the include dir of BigInt')
 # option('doctest_include_dir', type : 'string', value : '', description : 'the include dir of doctest')
 option('cli11_include_dir', type : 'string', value : '/home/lessi/cli11/', description : 'the dir containing CLI11.hpp')
 # option('cppfsm_include_dir', type : 'string', value : '', description : 'the dir containing fsm.h')
@@ -21,5 +20,3 @@ option('spdlog_include_dir', type : 'string', value : '/home/lessi/spdlog-1.9.2/
 # option('toml_include_dir', type : 'string', value : '', description : 'the include dir of toml++')
 # option('tfile_include_dir', type : 'string', value : '', description : 'the dir containing tfile.h')
 # option('sqlite_orm_include_dir', type : 'string', value : '', description : 'the dir containing sqlite_orm.h')
-option('picosha2_include_dir', type : 'string', value : '/home/lessi/PicoSHA2-1.0.0/', description : 'the dir containing picosha2.h')
-option('plusaes_include_dir', type : 'string', value : '/home/lessi/plusaes-0.10.0/include/', description : 'the dir containing plusaes.h')
