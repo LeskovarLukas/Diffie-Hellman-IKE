@@ -9,19 +9,75 @@
 
 void establish_secure_connection(Pipe&, BigInt&);
 
+
 int main() {
     spdlog::set_level(spdlog::level::debug);
 
     try {
+        State currentState = UNSECURED;
         Pipe pipe;
-        BigInt key = -1;
+        BigInt G;
+        BigInt P;
+        BigInt S;
+        BigInt c;
+        BigInt C;
+        BigInt key;
+        std::string clientCommunication;
+        std::string serverCommunication;
     
         while (true) {  
             try {
-                if (key == -1) {
+                if (currentState == State::UNSECURED) {
                     spdlog::info("Initiating key exchange");
-                    establish_secure_connection(pipe, key);
-                } else {
+                    pipe << "TYPE_CLIENTHELLO";
+                    currentState = ESTABLISHING;
+                } else if (currentState == State::ESTABLISHING) {
+                    std::string message;
+                    pipe >> message;
+                    std::vector<std::string> parts;
+                    split_message(message, parts);
+
+                    if (parts[0] == "SERVERHELLO") {
+                        int group_id = std::stoi(parts[1]);
+                        read_primes_json("../modp_primes.json", group_id, G, P);
+
+                        c = generate_random_number(1, P);
+                        C = pow(G, c.to_int()) % P;
+
+                    } else if (parts[0] == "CERTIFICATE") {
+                        S = BigInt(parts[1]);
+                        key = pow(S, c.to_int()) % P;
+                    } else if (parts[0] == "SERVERHELLODONE") {
+                        pipe << "TYPE_CLIENTKEYEXCHANGE|C_" + C.to_string();
+
+                        clientCommunication = "PRIMEGROUP_0|S_" + S.to_string() + "|C_" + C.to_string();
+                        clientCommunication = trim(clientCommunication);
+                        spdlog::debug("Client communication: {}", clientCommunication);
+                        pipe << "TYPE_CHANGECIPHERSPEC|" + send_message(key, clientCommunication);
+
+                        pipe << "TYPE_FINISHED";
+                    } else if (parts[0] == "CHANGECIPHERSPEC") {
+                        serverCommunication = receive_message(key, std::stoul(parts[1]), parts[2]);
+                        serverCommunication = trim(serverCommunication);
+                        spdlog::debug("Server communication: {}", serverCommunication);
+                    } else if (parts[0] == "FINISHED") {
+                        if (serverCommunication == clientCommunication) {
+                            spdlog::info("Secure connection established");
+                            currentState = State::SECURED;
+                        } else {
+                            spdlog::error("Secure connection failed");
+                            currentState = State::UNSECURED;
+                            pipe << "TYPE_ABORT";
+                        }
+                    } else if (parts[0] == "ABORT") {
+                        spdlog::error("Secure connection failed");
+                        currentState = State::UNSECURED;
+                    } else {
+                        spdlog::info("Received unknown message");
+                        currentState = State::UNSECURED;
+                        pipe << "TYPE_ABORT";
+                    }
+                } else if (currentState == State::SECURED) {
                     std::string input;
                     std::cout << "Enter message: ";
                     std::getline(std::cin, input);

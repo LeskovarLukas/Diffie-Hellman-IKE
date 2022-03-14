@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <json.hpp>
 
 #include "BigInt/BigInt.hpp"
 #include "PicoSHA2/picosha2.h"
@@ -14,6 +15,16 @@
 #pragma GCC diagnostic pop
 
 #include "pipe.h"
+
+
+using json = nlohmann::json;
+
+
+enum State {
+    UNSECURED,
+    ESTABLISHING,
+    SECURED
+};
 
 
 /*
@@ -33,6 +44,45 @@ void split_message(std::string& message, std::vector<std::string>& parts) {
 BigInt generate_random_number(BigInt min, BigInt max) {
     int randomData = open("/dev/urandom", O_RDONLY);
     return (randomData % (max - min + 1)) + min;
+}
+
+
+void read_primes_json(std::string filename, int id, BigInt& g, BigInt& p) {
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        std::cout << "Error opening file" << std::endl;
+        return;                      
+    }
+    json primes;
+    file >> primes;
+    file.close();
+    g = int(primes["groups"][id]["g"]); 
+    p = std::string(primes["groups"][id]["p_dec"]);
+}
+
+
+/*
+Trim Strings
+https://stackoverflow.com/questions/216823/how-to-trim-a-stdstring
+*/
+
+// trim from start
+static inline std::string& ltrim(std::string& s) {
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(),
+            std::not1(std::ptr_fun<int, int>(std::isspace))));
+    return s;
+}
+
+// trim from end
+static inline std::string& rtrim(std::string& s) {
+    s.erase(std::find_if(s.rbegin(), s.rend(),
+            std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+    return s;
+}
+
+// trim from both ends
+static inline std::string& trim(std::string& s) {
+    return ltrim(rtrim(s));
 }
 
 
@@ -183,7 +233,6 @@ std::string send_message(BigInt& key, std::string& message) {
     }
     unsigned long size = 0;
     std::string encrypted = encrypt(message, size, key.to_string());
-    spdlog::debug("Sending Encrypted: {}", encrypted);
 
     encrypted = encode_base64(encrypted);
 
@@ -197,8 +246,6 @@ std::string receive_message(BigInt& key, unsigned long size, std::string& messag
     }
 
     std::string encrypted = decode_base64(message);
-    spdlog::debug("Received Encrypted: {}", encrypted);
-
     std::string decrypted = decrypt(encrypted, size, key.to_string());
     return decrypted;
 }

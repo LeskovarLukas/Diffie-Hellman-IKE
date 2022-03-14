@@ -32,6 +32,7 @@ public:
     Pipe& operator<<(const std::string& message) {
         if (stream) {
             std::this_thread::sleep_for(delay);
+            spdlog::debug("Pipe Sending: {}", message);
             stream << message << std::endl;
         } else {
             throw std::runtime_error("Pipe: stream is not connected");
@@ -42,6 +43,7 @@ public:
     Pipe& operator>>(std::string& message) {
         if (stream) {
             getline(stream, message);
+            spdlog::debug("Pipe Received: {}", message);
         } else {
             throw std::runtime_error("Pipe: stream is not connected");
         }
