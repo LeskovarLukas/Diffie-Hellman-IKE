@@ -191,15 +191,12 @@ std::string send_message(BigInt& key, std::string& message) {
 }
 
 
-std::string receive_message(BigInt& key, std::string& message) {
+std::string receive_message(BigInt& key, unsigned long size, std::string& message) {
     if (message == "") {
         throw std::runtime_error("Message empty!");
     }
-    std::vector<std::string> parts;
-    split_message(message, parts);
 
-    unsigned long size = std::stoul(parts[0]);
-    std::string encrypted = decode_base64(parts[1]);
+    std::string encrypted = decode_base64(message);
     spdlog::debug("Received Encrypted: {}", encrypted);
 
     std::string decrypted = decrypt(encrypted, size, key.to_string());

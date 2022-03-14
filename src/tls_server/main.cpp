@@ -89,15 +89,22 @@ void handle_socket(asio::ip::tcp::socket& socket) {
         while (true) {
             try {
                 pipe >> message;
-                spdlog::debug("Message Raw: {}", message); 
+                if (message != "") {
+                    std::vector<std::string> parts;
+                    split_message(message, parts);
+
+                    if (parts[0] == "TLSDHE") {
+                        spdlog::info("Establishing secure connection");
+                        establish_secure_connection(pipe, key);
+                    } else if (parts[0] == "DATA") {
+                        std::string information = receive_message(key, std::stoul(parts[1]), parts[2]);
+                        spdlog::info("Received information: {}", information);
+                    } else {
+                        spdlog::error("Unknown message: {}", message);
+                    }
+                }
                 
-                if (message == "TLS_DHE") {
-                    spdlog::info("Establishing secure connection");
-                    establish_secure_connection(pipe, key);
-                } else {
-                    message = receive_message(key, message);
-                    spdlog::info("Received message: {}", message);
-                } 
+
             } catch (std::exception& e) {
                 if (!pipe) 
                     throw std::runtime_error("Pipe connection lost");

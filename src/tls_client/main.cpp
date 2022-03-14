@@ -25,7 +25,7 @@ int main() {
                     std::string input;
                     std::cout << "Enter message: ";
                     std::getline(std::cin, input);
-                    pipe << send_message(key, input);
+                    pipe << "TYPE_DATA|" + send_message(key, input);
                 }
             } catch (std::exception& e) {
                 spdlog::warn(e.what());
@@ -56,7 +56,7 @@ int main() {
 }
 
 void establish_secure_connection(Pipe& pipe, BigInt& K) {
-    pipe << "TLS_DHE";
+    pipe << "TYPE_TLSDHE";
 
     std::string message;
     pipe >> message;
