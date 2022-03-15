@@ -2,6 +2,7 @@
 
 #include <string>
 #include <asio.hpp>
+#include <spdlog/spdlog.h>
 
 class Pipe {
 private:

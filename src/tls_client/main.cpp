@@ -2,10 +2,11 @@
 #include <vector>
 
 #include "BigInt/BigInt.hpp"
-#include "spdlog/spdlog.h"
+#include <spdlog/spdlog.h>
 
 #include "pipe.h"
 #include "utility.h"
+#include "tls_util.h"
 
 void establish_secure_connection(Pipe&, BigInt&);
 
@@ -14,74 +15,32 @@ int main() {
     spdlog::set_level(spdlog::level::debug);
 
     try {
-        State currentState = UNSECURED;
         Pipe pipe;
-        BigInt G;
-        BigInt P;
-        BigInt S;
-        BigInt c;
-        BigInt C;
-        BigInt key = -1;
-        std::string clientCommunication{};
-        std::string serverCommunication{};
-    
+
+        TLS_Util tls_util(pipe);
+
         while (true) {  
             try {
-                if (currentState == State::UNSECURED) {
-                    spdlog::info("Initiating key exchange");
-                    pipe << "TYPE_CLIENTHELLO";
-                    currentState = ESTABLISHING;
-                } else if (currentState == State::ESTABLISHING) {
-                    std::string message;
-                    pipe >> message;
-                    std::vector<std::string> parts;
-                    split_message(message, parts);
-
-                    if (parts[0] == "SERVERHELLO") {
-                        int group_id = std::stoi(parts[1]);
-                        read_primes_json("../modp_primes.json", group_id, G, P);
-
-                        c = generate_random_number(1, P);
-                        C = pow(G, c.to_int()) % P;
-
-                    } else if (parts[0] == "CERTIFICATE") {
-                        S = BigInt(parts[1]);
-                        key = pow(S, c.to_int()) % P;
-                    } else if (parts[0] == "SERVERHELLODONE") {
-                        pipe << "TYPE_CLIENTKEYEXCHANGE|C_" + C.to_string();
-
-                        picosha2::hash256_hex_string("PRIMEGROUP_0|S_" + S.to_string() + "|C_" + C.to_string(), clientCommunication);
-                        clientCommunication.resize(66);
-                        spdlog::debug("Client communication: {}", clientCommunication);
-                        pipe << "TYPE_CHANGECIPHERSPEC|" + send_message(key, clientCommunication);
-
-                        pipe << "TYPE_FINISHED";
-                    } else if (parts[0] == "CHANGECIPHERSPEC") {
-                        serverCommunication = receive_message(key, std::stoul(parts[1]), parts[2]);
-                        serverCommunication.resize(66);
-                        spdlog::debug("Server communication: {}", serverCommunication);
-                    } else if (parts[0] == "FINISHED") {
-                        if (serverCommunication == clientCommunication) {
-                            spdlog::info("Secure connection established");
-                            currentState = State::SECURED;
-                        } else {
-                            spdlog::error("Secure connection failed");
-                            currentState = State::UNSECURED;
-                            pipe << "TYPE_ABORT";
-                        }
-                    } else if (parts[0] == "ABORT") {
-                        spdlog::error("Secure connection failed");
-                        currentState = State::UNSECURED;
-                    } else {
-                        spdlog::info("Received unknown message");
-                        currentState = State::UNSECURED;
-                        pipe << "TYPE_ABORT";
-                    }
-                } else if (currentState == State::SECURED) {
+                if (tls_util.is_secure()) {
                     std::string input;
                     std::cout << "Enter message: ";
                     std::getline(std::cin, input);
+                    BigInt key = tls_util.get_key();
                     pipe << "TYPE_DATA|" + send_message(key, input);
+                } else if (tls_util.is_establishing()) {
+                    std::string message;
+                    pipe >> message;
+
+                    if (message == "") {
+                        spdlog::warn("Received empty message");
+                        continue;
+                    }
+                    std::vector<std::string> message_parts;
+                    split_message(message, message_parts);
+
+                    tls_util.handle_message(message_parts);
+                } else {
+                    tls_util.initiate_handshake();
                 }
             } catch (std::exception& e) {
                 spdlog::warn(e.what());
@@ -91,7 +50,7 @@ int main() {
                     for (int i = 0; i < 10; i++) {
                         try {
                             pipe.try_reconnect();
-                            key = -1;
+                            tls_util.reconnect();
                             spdlog::info("Reconnected");
                             break;
                         } catch (std::exception& e) {

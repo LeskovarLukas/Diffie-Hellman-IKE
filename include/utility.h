@@ -5,6 +5,7 @@
 #include <vector>
 #include <fstream>
 #include <json.hpp>
+#include <spdlog/spdlog.h>
 
 #include "BigInt/BigInt.hpp"
 #include "PicoSHA2/picosha2.h"
