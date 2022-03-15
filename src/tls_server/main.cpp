@@ -65,8 +65,8 @@ void handle_socket(asio::ip::tcp::socket& socket) {
     BigInt S;
     BigInt C;
     BigInt key = -1;
-    std::string serverCommunication;
-    std::string clientCommunication;
+    std::string serverCommunication = {};
+    std::string clientCommunication = {};
     std::string message;
 
     try {
@@ -98,16 +98,16 @@ void handle_socket(asio::ip::tcp::socket& socket) {
                             key = pow(C, s.to_int()) % P;
                         } else if (parts[0] == "CHANGECIPHERSPEC") {
                             clientCommunication = receive_message(key, std::stoul(parts[1]), parts[2]);
-                            clientCommunication = trim(clientCommunication);
+                            clientCommunication.resize(66);
                             spdlog::debug("Client Communication: {}", clientCommunication);
                         } else if (parts[0] == "FINISHED") {
-                            serverCommunication = "PRIMEGROUP_0|S_" + S.to_string() + "|C_" + C.to_string();
-                            serverCommunication = trim(serverCommunication);
+                            picosha2::hash256_hex_string("PRIMEGROUP_0|S_" + S.to_string() + "|C_" + C.to_string(), serverCommunication);
+                            serverCommunication.resize(66);
+                            
                             spdlog::debug("Server Communication: {}", serverCommunication);
                             pipe << "TYPE_CHANGECIPHERSPEC|" + send_message(key, serverCommunication);
 
-                            std::cout << (clientCommunication == serverCommunication) << std::endl;
-                            if (clientCommunication == serverCommunication) {
+                            if (serverCommunication == clientCommunication) {
                                 spdlog::info("Secure connection established");
                                 currentState = State::SECURED;
                                 pipe << "TYPE_FINISHED";

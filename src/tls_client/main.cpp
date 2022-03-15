@@ -21,9 +21,9 @@ int main() {
         BigInt S;
         BigInt c;
         BigInt C;
-        BigInt key;
-        std::string clientCommunication;
-        std::string serverCommunication;
+        BigInt key = -1;
+        std::string clientCommunication{};
+        std::string serverCommunication{};
     
         while (true) {  
             try {
@@ -50,15 +50,15 @@ int main() {
                     } else if (parts[0] == "SERVERHELLODONE") {
                         pipe << "TYPE_CLIENTKEYEXCHANGE|C_" + C.to_string();
 
-                        clientCommunication = "PRIMEGROUP_0|S_" + S.to_string() + "|C_" + C.to_string();
-                        clientCommunication = trim(clientCommunication);
+                        picosha2::hash256_hex_string("PRIMEGROUP_0|S_" + S.to_string() + "|C_" + C.to_string(), clientCommunication);
+                        clientCommunication.resize(66);
                         spdlog::debug("Client communication: {}", clientCommunication);
                         pipe << "TYPE_CHANGECIPHERSPEC|" + send_message(key, clientCommunication);
 
                         pipe << "TYPE_FINISHED";
                     } else if (parts[0] == "CHANGECIPHERSPEC") {
                         serverCommunication = receive_message(key, std::stoul(parts[1]), parts[2]);
-                        serverCommunication = trim(serverCommunication);
+                        serverCommunication.resize(66);
                         spdlog::debug("Server communication: {}", serverCommunication);
                     } else if (parts[0] == "FINISHED") {
                         if (serverCommunication == clientCommunication) {

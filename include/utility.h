@@ -61,27 +61,37 @@ void read_primes_json(std::string filename, int id, BigInt& g, BigInt& p) {
 }
 
 
+void remove_whitespace(std::string& str) {
+    str.erase (std::remove_if (str.begin(), 
+    str.end(),
+    [](unsigned char c){
+        return !std::isprint(c);
+    }),
+    str.end());
+}
+
+
 /*
 Trim Strings
 https://stackoverflow.com/questions/216823/how-to-trim-a-stdstring
 */
 
 // trim from start
-static inline std::string& ltrim(std::string& s) {
+static inline std::string ltrim(std::string s) {
     s.erase(s.begin(), std::find_if(s.begin(), s.end(),
             std::not1(std::ptr_fun<int, int>(std::isspace))));
     return s;
 }
 
 // trim from end
-static inline std::string& rtrim(std::string& s) {
+static inline std::string rtrim(std::string s) {
     s.erase(std::find_if(s.rbegin(), s.rend(),
             std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
     return s;
 }
 
 // trim from both ends
-static inline std::string& trim(std::string& s) {
+static inline std::string trim(std::string s) {
     return ltrim(rtrim(s));
 }
 
@@ -233,10 +243,9 @@ std::string send_message(BigInt& key, std::string& message) {
     }
     unsigned long size = 0;
     std::string encrypted = encrypt(message, size, key.to_string());
+    spdlog::debug("Encrypted message: {}", encrypted);
 
-    encrypted = encode_base64(encrypted);
-
-    return "SIZE_" + std::to_string(size) + "|" + "MSG_" + encrypted;
+    return "SIZE_" + std::to_string(size) + "|" + "MSG_" + encode_base64(encrypted);
 }
 
 
@@ -246,6 +255,6 @@ std::string receive_message(BigInt& key, unsigned long size, std::string& messag
     }
 
     std::string encrypted = decode_base64(message);
-    std::string decrypted = decrypt(encrypted, size, key.to_string());
-    return decrypted;
+    spdlog::debug("Encrypted message: {}", encrypted);
+    return decrypt(encrypted, size, key.to_string());
 }
