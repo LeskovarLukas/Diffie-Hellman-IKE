@@ -1,5 +1,8 @@
 * Changelog
-** [0.1.1] - Unreleased
+** [0.1.2] - Unreleased
+*** Changed
+- Implemented realistic DHKE
+** [0.1.1] - 2022-03-09
 *** Added
 - Error handling
 *** Changed
