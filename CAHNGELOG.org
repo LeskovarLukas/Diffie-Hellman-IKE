@@ -1,5 +1,7 @@
 * Changelog
 ** [0.1.2] - Unreleased
+*** Added 
+- TLS_Util class
 *** Changed
 - Implemented realistic DHKE
 ** [0.1.1] - 2022-03-09

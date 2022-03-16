@@ -73,6 +73,7 @@ public:
 
                 // calculate shared secret key
                 key = pow(S, c.to_int()) % P;
+                spdlog::debug("Master Key: {}", key.to_string());
 
             } else if (messageType == "SERVERHELLODONE") {
                 // Send client public key
@@ -80,7 +81,7 @@ public:
 
                 // Create client protocol
                 picosha2::hash256_hex_string(
-                    "PRIMEGROUP_" + std::to_string(primeGroup) + "|S_" + S.to_string() + "|C_" + C.to_string()
+                    "PRIMEGROUP_0|S_" + S.to_string() + "|C_" + C.to_string()
                     , localProtocol
                 );
                 localProtocol.resize(66);
@@ -95,7 +96,9 @@ public:
                 C = BigInt(message_parts[1]);
 
                 // calculate shared secret key
-                key = pow(S, c.to_int()) % P;
+                key = pow(C, s.to_int()) % P;
+                spdlog::debug("Master Key: {}", key.to_string());
+
             } else if (messageType == "CHANGECIPHERSPEC") {
                 // Receive partner protocol (client and server)
                 partnerProtocol = receive_message(key, std::stoul(message_parts[1]), message_parts[2]);
@@ -104,7 +107,7 @@ public:
             } else if (messageType == "CLIENTFINISHED") {
                 // Create server protocol
                 picosha2::hash256_hex_string(
-                    "PRIMEGROUP_" + std::to_string(primeGroup) + "|S_" + S.to_string() + "|C_" + C.to_string()
+                    "PRIMEGROUP_0|S_" + S.to_string() + "|C_" + C.to_string()
                     , localProtocol
                 );
                 localProtocol.resize(66);
