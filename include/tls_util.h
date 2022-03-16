@@ -23,6 +23,16 @@ private:
     // Handshake protocol
     std::string localProtocol;
     std::string partnerProtocol;
+    bool partnerEncrypted = false;  //for change cipher spec
+
+    bool check_protocols() {
+        if (localProtocol != partnerProtocol) {
+            spdlog::warn("Protocols do not match");
+            pipe << "ABORT";
+            return false;
+        }
+        return true;
+    }
 
 public:
     TLS_Util(Pipe& pipe): pipe(pipe) {}
@@ -79,6 +89,10 @@ public:
                 // Send client public key
                 pipe << "TYPE_CLIENTKEYEXCHANGE|C_" + C.to_string();
 
+
+                // Start encrypted communication
+                pipe << "TYPE_CHANGECIPHERSPEC";
+
                 // Create client protocol
                 picosha2::hash256_hex_string(
                     "PRIMEGROUP_0|S_" + S.to_string() + "|C_" + C.to_string()
@@ -86,11 +100,8 @@ public:
                 );
                 localProtocol.resize(66);
 
-                // Send client protocol
-                pipe << "TYPE_CHANGECIPHERSPEC|" + send_message(key, localProtocol);
-
                 // Client finished
-                pipe << "TYPE_CLIENTFINISHED";
+                pipe << "TYPE_FINISHED|"  + send_message(key, localProtocol) + "|PARTY_CLIENT";
             } else if (messageType == "CLIENTKEYEXCHANGE") {
                 // Receive client public key 
                 C = BigInt(message_parts[1]);
@@ -100,40 +111,46 @@ public:
                 spdlog::debug("Master Key: {}", key.to_string());
 
             } else if (messageType == "CHANGECIPHERSPEC") {
+                partnerEncrypted = true;
+
+            } else if (messageType == "FINISHED") {
+                if (!partnerEncrypted) {
+                    pipe << "TYPE_ABORT";
+                    throw std::runtime_error("TLS_Util::handle_message() - Partner did not send ChangeCipherSpec");
+                }
+
                 // Receive partner protocol (client and server)
                 partnerProtocol = receive_message(key, std::stoul(message_parts[1]), message_parts[2]);
                 partnerProtocol.resize(66);
 
-            } else if (messageType == "CLIENTFINISHED") {
-                // Create server protocol
-                picosha2::hash256_hex_string(
-                    "PRIMEGROUP_0|S_" + S.to_string() + "|C_" + C.to_string()
-                    , localProtocol
-                );
-                localProtocol.resize(66);
+                if (message_parts[3] == "CLIENT") {         // Server receives client finished
+                    // Start encrypted communication
+                    pipe << "TYPE_CHANGECIPHERSPEC";
 
-                // Send server protocol
-                pipe << "TYPE_CHANGECIPHERSPEC|" + send_message(key, localProtocol);
+                    // Create server protocol
+                    picosha2::hash256_hex_string(
+                        "PRIMEGROUP_0|S_" + S.to_string() + "|C_" + C.to_string()
+                        , localProtocol
+                    );
+                    localProtocol.resize(66);
 
-                // Compare protocols
-                if (localProtocol == partnerProtocol) {
-                    spdlog::info("TLS connection established");
-                    currentState = State::SECURED;
-                    pipe << "TYPE_SERVERFINISHED";
-                } else {
-                    spdlog::error("TLS connection failed");
-                    currentState = State::UNSECURED;
-                    pipe << "TYPE_ABORT";
-                }
-
-            } else if (messageType == "SERVERFINISHED") {
-                // Compare protocols
-                if (localProtocol == partnerProtocol) {
-                    spdlog::info("TLS connection established");
-                    currentState = State::SECURED;
-                } else {
-                    spdlog::error("TLS connection failed");
-                    currentState = State::UNSECURED;
+                    if (check_protocols()) {
+                        spdlog::info("TLS connection established");
+                        pipe << "TYPE_FINISHED|"  + send_message(key, localProtocol) + "|PARTY_SERVER";
+                        currentState = State::SECURED;
+                    } else {
+                        spdlog::error("TLS connection failed");
+                        currentState = State::UNSECURED;
+                    }
+                    
+                } else if (message_parts[3] == "SERVER") {      // Client receives server finished
+                    if (check_protocols()) {
+                        spdlog::info("TLS connection established");
+                        currentState = State::SECURED;
+                    } else {
+                        spdlog::error("TLS connection failed");
+                        currentState = State::UNSECURED;
+                    }
                 }
             } else if (messageType == "ABORT") {
                 spdlog::error("TLS connection failed");
