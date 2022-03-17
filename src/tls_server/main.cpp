@@ -78,10 +78,12 @@ void handle_socket(asio::ip::tcp::socket& socket) {
                 std::vector<std::string> message_parts;
                 split_message(message, message_parts);
                 
-                if (tls_util.is_secure()) {
+                if (message_parts[0] == "DATA" && tls_util.is_secure()) {
                     BigInt key = tls_util.get_key();
                     message = receive_message(key, std::stoul(message_parts[1]), message_parts[2]);
                     spdlog::info("Received Message: {}", message);
+                } else if (message_parts[0] == "CLOSE") {
+                    break;
                 } else {
                     tls_util.handle_message(message_parts);
                 }

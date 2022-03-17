@@ -25,6 +25,13 @@ int main() {
                     std::string input;
                     std::cout << "Enter message: ";
                     std::getline(std::cin, input);
+
+                    if (input == "quit") {
+                        pipe << "TYPE_CLOSE";
+                        spdlog::info("Closing connection");
+                        break;
+                    }
+
                     BigInt key = tls_util.get_key();
                     pipe << "TYPE_DATA|" + send_message(key, input);
                 } else if (tls_util.is_establishing()) {
@@ -47,6 +54,7 @@ int main() {
 
                 if (!pipe) {
                     spdlog::info("Trying to reconnect");
+
                     for (int i = 0; i < 10; i++) {
                         try {
                             pipe.try_reconnect();

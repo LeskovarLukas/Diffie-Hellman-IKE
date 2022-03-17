@@ -27,7 +27,6 @@ private:
 
     bool check_protocols() {
         if (localProtocol != partnerProtocol) {
-            spdlog::warn("Protocols do not match");
             pipe << "ABORT";
             return false;
         }
@@ -135,26 +134,26 @@ public:
                     localProtocol.resize(66);
 
                     if (check_protocols()) {
-                        spdlog::info("TLS connection established");
                         pipe << "TYPE_FINISHED|"  + send_message(key, localProtocol) + "|PARTY_SERVER";
                         currentState = State::SECURED;
+                        spdlog::info("TLS_Util::handle_message() - TLS connection established");
                     } else {
-                        spdlog::error("TLS connection failed");
                         currentState = State::UNSECURED;
+                        throw new std::runtime_error("TLS_Util::handle_message() - Protocols do not match");
                     }
                     
                 } else if (message_parts[3] == "SERVER") {      // Client receives server finished
                     if (check_protocols()) {
-                        spdlog::info("TLS connection established");
                         currentState = State::SECURED;
+                        spdlog::info("TLS_Util::handle_message() - TLS connection established");
                     } else {
-                        spdlog::error("TLS connection failed");
                         currentState = State::UNSECURED;
+                        throw new std::runtime_error("TLS_Util::handle_message() - Protocols do not match");
                     }
                 }
             } else if (messageType == "ABORT") {
-                spdlog::error("TLS connection failed");
                 currentState = State::UNSECURED;
+                throw new std::runtime_error("TLS_Util::handle_message() - TLS connection aborted");
             } else {
                 spdlog::error("Unknown message type: {}", messageType);
             }
