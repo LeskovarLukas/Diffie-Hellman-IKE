@@ -21,13 +21,6 @@
 using json = nlohmann::json;
 
 
-enum State {
-    UNSECURED,
-    ESTABLISHING,
-    SECURED
-};
-
-
 /*
 General Utility Functions
 */
@@ -59,41 +52,6 @@ void read_primes_json(std::string filename, int id, BigInt& g, BigInt& p) {
     file.close();
     g = int(primes["groups"][id]["g"]); 
     p = std::string(primes["groups"][id]["p_dec"]);
-}
-
-
-void remove_whitespace(std::string& str) {
-    str.erase (std::remove_if (str.begin(), 
-    str.end(),
-    [](unsigned char c){
-        return !std::isprint(c);
-    }),
-    str.end());
-}
-
-
-/*
-Trim Strings
-https://stackoverflow.com/questions/216823/how-to-trim-a-stdstring
-*/
-
-// trim from start
-static inline std::string ltrim(std::string s) {
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(),
-            std::not1(std::ptr_fun<int, int>(std::isspace))));
-    return s;
-}
-
-// trim from end
-static inline std::string rtrim(std::string s) {
-    s.erase(std::find_if(s.rbegin(), s.rend(),
-            std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
-    return s;
-}
-
-// trim from both ends
-static inline std::string trim(std::string s) {
-    return ltrim(rtrim(s));
 }
 
 

@@ -5,6 +5,14 @@
 #include "pipe.h"
 #include "utility.h"
 
+
+enum State {
+    UNSECURED,
+    ESTABLISHING,
+    SECURED
+};
+
+
 class TLS_Util {
 private:
     Pipe& pipe;
