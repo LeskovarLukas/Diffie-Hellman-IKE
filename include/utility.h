@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <json.hpp>
+#include <spdlog/spdlog.h>
 
 #include "BigInt/BigInt.hpp"
 #include "PicoSHA2/picosha2.h"
@@ -14,6 +16,9 @@
 #pragma GCC diagnostic pop
 
 #include "pipe.h"
+
+
+using json = nlohmann::json;
 
 
 /*
@@ -33,6 +38,20 @@ void split_message(std::string& message, std::vector<std::string>& parts) {
 BigInt generate_random_number(BigInt min, BigInt max) {
     int randomData = open("/dev/urandom", O_RDONLY);
     return (randomData % (max - min + 1)) + min;
+}
+
+
+void read_primes_json(std::string filename, int id, BigInt& g, BigInt& p) {
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        std::cout << "Error opening file" << std::endl;
+        return;                      
+    }
+    json primes;
+    file >> primes;
+    file.close();
+    g = int(primes["groups"][id]["g"]); 
+    p = std::string(primes["groups"][id]["p_dec"]);
 }
 
 
@@ -183,25 +202,18 @@ std::string send_message(BigInt& key, std::string& message) {
     }
     unsigned long size = 0;
     std::string encrypted = encrypt(message, size, key.to_string());
-    spdlog::debug("Sending Encrypted: {}", encrypted);
+    spdlog::debug("Encrypted message: {}", encrypted);
 
-    encrypted = encode_base64(encrypted);
-
-    return "SIZE_" + std::to_string(size) + "|" + "MSG_" + encrypted;
+    return "SIZE_" + std::to_string(size) + "|" + "MSG_" + encode_base64(encrypted);
 }
 
 
-std::string receive_message(BigInt& key, std::string& message) {
+std::string receive_message(BigInt& key, unsigned long size, std::string& message) {
     if (message == "") {
         throw std::runtime_error("Message empty!");
     }
-    std::vector<std::string> parts;
-    split_message(message, parts);
 
-    unsigned long size = std::stoul(parts[0]);
-    std::string encrypted = decode_base64(parts[1]);
-    spdlog::debug("Received Encrypted: {}", encrypted);
-
-    std::string decrypted = decrypt(encrypted, size, key.to_string());
-    return decrypted;
+    std::string encrypted = decode_base64(message);
+    spdlog::debug("Encrypted message: {}", encrypted);
+    return decrypt(encrypted, size, key.to_string());
 }
