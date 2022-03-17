@@ -3,6 +3,7 @@
 *** Changed
 - Error handling
 *** Added 
+- multiple clients simultaniously
 - quit command
 - TLS_Util class
 *** Changed
