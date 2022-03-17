@@ -18,7 +18,7 @@ private:
     BigInt S;
     BigInt c;
     BigInt C; 
-    BigInt key;
+    BigInt& key;
 
     // Handshake protocol
     std::string localProtocol;
@@ -34,7 +34,7 @@ private:
     }
 
 public:
-    TLS_Util(Pipe& pipe): pipe(pipe) {}
+    TLS_Util(Pipe& pipe, BigInt& key): pipe(pipe), key(key) {}
 
     void initiate_handshake() {
         if (currentState == SECURED) {
@@ -169,10 +169,6 @@ public:
 
     bool is_establishing() const {
         return currentState == ESTABLISHING;
-    }
-
-    BigInt get_key() const {
-        return key;
     }
 
     void reconnect() {

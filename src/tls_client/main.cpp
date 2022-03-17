@@ -8,7 +8,6 @@
 #include "utility.h"
 #include "tls_util.h"
 
-void establish_secure_connection(Pipe&, BigInt&);
 
 
 int main() {
@@ -16,8 +15,9 @@ int main() {
 
     try {
         Pipe pipe;
+        BigInt key; 
 
-        TLS_Util tls_util(pipe);
+        TLS_Util tls_util(pipe, key);
 
         while (true) {  
             try {
@@ -32,7 +32,6 @@ int main() {
                         break;
                     }
 
-                    BigInt key = tls_util.get_key();
                     pipe << "TYPE_DATA|" + send_message(key, input);
                 } else if (tls_util.is_establishing()) {
                     std::string message;
@@ -77,27 +76,3 @@ int main() {
     
     return 0;
 }
-
-void establish_secure_connection(Pipe& pipe, BigInt& K) {
-    pipe << "TYPE_TLSDHE";
-
-    std::string message;
-    pipe >> message;
-
-    std::vector<std::string> parameters;
-    split_message(message, parameters);
-
-    BigInt G = parameters[0];
-    BigInt P = parameters[1];
-    BigInt S = parameters[2];
-    spdlog::debug("Received S: {}", S.to_string());
-    BigInt c = generate_random_number(1, P);
-    BigInt C = pow(G, c.to_int()) % P;
-    spdlog::debug("Sending C: {}", C.to_string());
-
-    pipe << "C_" + C.to_string();
-
-    K = pow(S, c.to_int()) % P;
-    spdlog::info("Key: {}", K.to_string());
-}
-

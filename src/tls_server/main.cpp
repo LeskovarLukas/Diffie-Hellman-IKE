@@ -64,7 +64,8 @@ void handle_socket(asio::ip::tcp::socket& socket) {
 
     try {
         Pipe pipe{std::move(socket)};
-        TLS_Util tls_util{pipe};
+        BigInt key;
+        TLS_Util tls_util(pipe, key);
 
         while (true) {
             try {
@@ -79,7 +80,6 @@ void handle_socket(asio::ip::tcp::socket& socket) {
                 split_message(message, message_parts);
                 
                 if (message_parts[0] == "DATA" && tls_util.is_secure()) {
-                    BigInt key = tls_util.get_key();
                     message = receive_message(key, std::stoul(message_parts[1]), message_parts[2]);
                     spdlog::info("Received Message: {}", message);
                 } else if (message_parts[0] == "CLOSE") {
