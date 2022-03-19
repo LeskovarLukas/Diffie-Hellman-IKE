@@ -13,25 +13,27 @@
 void handle_socket(asio::ip::tcp::socket&);
 
 int main() {
+    spdlog::set_level(spdlog::level::debug);
     std::vector<std::thread> threads;
+    std::vector<asio::ip::tcp::socket*> sockets;
 
     try {
         asio::io_context io_context;
         asio::ip::tcp::endpoint endpoint{asio::ip::tcp::v4(), 4433};
         asio::ip::tcp::acceptor acceptor{io_context, endpoint};
-        
-        spdlog::set_level(spdlog::level::debug);
     
         try {
+
             spdlog::info("Waiting for connections");
             acceptor.listen();
 
             while (true) {
-                asio::ip::tcp::socket socket{io_context};
-                acceptor.accept(socket);
+                asio::ip::tcp::socket* socket = new asio::ip::tcp::socket(io_context);
+                sockets.push_back(socket);
+                acceptor.accept(*socket);
                 spdlog::info("Connection accepted");
-                
-                threads.push_back(std::thread{handle_socket, std::ref(socket)});
+
+                threads.push_back(std::thread{handle_socket, std::ref(*socket)});
             }
         } catch (std::exception& e) {
             spdlog::error(e.what());
@@ -43,6 +45,7 @@ int main() {
 
     for (auto& thread : threads) {
         thread.join();
+        delete sockets.back();
     }
     return 0;
 }
