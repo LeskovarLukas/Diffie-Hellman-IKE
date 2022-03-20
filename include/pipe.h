@@ -10,7 +10,7 @@ private:
     std::string host;
     std::string port;
     asio::ip::tcp::iostream stream;
-    std::chrono::milliseconds delay;
+    std::chrono::milliseconds delay = std::chrono::milliseconds(0);
 
 
     void wait_random() {
