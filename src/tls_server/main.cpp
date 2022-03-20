@@ -2,8 +2,10 @@
 #include <asio.hpp>
 #include <fstream>
 #include <spdlog/spdlog.h>
+#include <future>
 
 #include "BigInt/BigInt.hpp"
+#include "CLI11.hpp"
 
 #include "pipe.h"
 #include "utility.h"
@@ -12,26 +14,48 @@
 
 void handle_socket(asio::ip::tcp::socket&);
 
-int main() {
+int main(int argc, char* argv[]) {
+    CLI::App app{"tls_server"};
+
+    int port = 4433;
+    spdlog::level::level_enum log_level = spdlog::level::info;
+    std::map<std::string, spdlog::level::level_enum> log_level_map = {
+        {"trace", spdlog::level::trace},
+        {"debug", spdlog::level::debug},
+        {"info", spdlog::level::info},
+        {"warn", spdlog::level::warn},
+        {"error", spdlog::level::err},
+        {"critical", spdlog::level::critical}
+    };
+
+    app.add_option("-p,--port", port, "Port");
+    app.add_option("-l,--log-level", log_level, "Log level")->transform(CLI::CheckedTransformer(log_level_map, CLI::ignore_case));
+
+
+    CLI11_PARSE(app, argc, argv);
+
+
+    spdlog::set_level(log_level);
     std::vector<std::thread> threads;
+    std::vector<asio::ip::tcp::socket*> sockets;
 
     try {
         asio::io_context io_context;
-        asio::ip::tcp::endpoint endpoint{asio::ip::tcp::v4(), 4433};
+        asio::ip::tcp::endpoint endpoint{asio::ip::tcp::v4(), (asio::ip::port_type)port};
         asio::ip::tcp::acceptor acceptor{io_context, endpoint};
-        
-        spdlog::set_level(spdlog::level::debug);
     
         try {
+
             spdlog::info("Waiting for connections");
             acceptor.listen();
 
             while (true) {
-                asio::ip::tcp::socket socket{io_context};
-                acceptor.accept(socket);
+                asio::ip::tcp::socket* socket = new asio::ip::tcp::socket(io_context);
+                sockets.push_back(socket);
+                acceptor.accept(*socket);
                 spdlog::info("Connection accepted");
-                
-                threads.push_back(std::thread{handle_socket, std::ref(socket)});
+
+                threads.push_back(std::thread{handle_socket, std::ref(*socket)});
             }
         } catch (std::exception& e) {
             spdlog::error(e.what());
@@ -43,22 +67,33 @@ int main() {
 
     for (auto& thread : threads) {
         thread.join();
+        delete sockets.back();
     }
     return 0;
 }
 
 
 void handle_socket(asio::ip::tcp::socket& socket) {
-    std::string message;
-
     try {
         Pipe pipe{std::move(socket)};
         BigInt key;
         TLS_Util tls_util(pipe, key);
 
-        while (true) {
+        while (pipe) {
             try {
-                pipe >> message;
+                auto receive_future = std::async(std::launch::async, [&]() {
+                    std::string message;
+                    pipe >> message;
+                    return message;
+                });
+                
+                if (receive_future.wait_for(std::chrono::seconds(10)) == std::future_status::timeout) {
+                    spdlog::warn("Timeout - closing connection");
+                    pipe.close();
+                    socket.close();
+                    return;
+                } 
+                std::string message = receive_future.get();
 
                 if (message == "") {
                     spdlog::warn("Received empty message");
@@ -72,7 +107,9 @@ void handle_socket(asio::ip::tcp::socket& socket) {
                     message = receive_message(key, std::stoul(message_parts[1]), message_parts[2]);
                     spdlog::info("Received Message: {}", message);
                 } else if (message_parts[0] == "CLOSE") {
-                    break;
+                    pipe.close();
+                    socket.close();
+                    return;
                 } else {
                     tls_util.handle_message(message_parts);
                 }

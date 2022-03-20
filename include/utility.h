@@ -35,7 +35,7 @@ void split_message(std::string& message, std::vector<std::string>& parts) {
 }
 
 
-BigInt generate_random_number(BigInt min, BigInt max) {
+BigInt generate_random_number(BigInt min=0, BigInt max=0) {
     int randomData = open("/dev/urandom", O_RDONLY);
     return (randomData % (max - min + 1)) + min;
 }
