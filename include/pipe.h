@@ -3,13 +3,22 @@
 #include <string>
 #include <asio.hpp>
 #include <spdlog/spdlog.h>
+#include <random>
 
 class Pipe {
 private:
     std::string host;
     std::string port;
     asio::ip::tcp::iostream stream;
-    std::chrono::milliseconds delay = std::chrono::milliseconds(0);
+    std::chrono::milliseconds delay;
+
+
+    void wait_random() {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> dis(0, delay.count());
+        std::this_thread::sleep_for(std::chrono::milliseconds(dis(gen)));
+    }
 
 public:
     Pipe(const std::string& host="localhost", const std::string& port="4433"): stream{host, port} {
@@ -20,7 +29,11 @@ public:
         this->port = port;
     }
 
-    Pipe(asio::ip::tcp::socket socket): stream{std::move(socket)} {}
+    Pipe(asio::ip::tcp::socket socket): stream{std::move(socket)} {
+        if (!stream) {
+            throw std::runtime_error("Pipe: Could not connect");
+        }
+    }
 
     ~Pipe() {
         this->stream.close();
@@ -32,7 +45,7 @@ public:
 
     Pipe& operator<<(const std::string& message) {
         if (stream) {
-            std::this_thread::sleep_for(delay);
+            wait_random();
             spdlog::debug("Pipe Sending: {}", message);
             stream << message << std::endl;
         } else {
@@ -62,5 +75,9 @@ public:
 
     void set_delay(std::chrono::milliseconds delay) {
         this->delay = delay;
+    }
+
+    void close() {
+        stream.close();
     }
 };

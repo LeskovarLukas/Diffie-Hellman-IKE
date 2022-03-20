@@ -2,6 +2,7 @@
 #include <asio.hpp>
 #include <fstream>
 #include <spdlog/spdlog.h>
+#include <future>
 
 #include "BigInt/BigInt.hpp"
 #include "CLI11.hpp"
@@ -73,16 +74,26 @@ int main(int argc, char* argv[]) {
 
 
 void handle_socket(asio::ip::tcp::socket& socket) {
-    std::string message;
-
     try {
         Pipe pipe{std::move(socket)};
         BigInt key;
         TLS_Util tls_util(pipe, key);
 
-        while (true) {
+        while (pipe) {
             try {
-                pipe >> message;
+                auto receive_future = std::async(std::launch::async, [&]() {
+                    std::string message;
+                    pipe >> message;
+                    return message;
+                });
+                
+                if (receive_future.wait_for(std::chrono::seconds(10)) == std::future_status::timeout) {
+                    spdlog::warn("Timeout - closing connection");
+                    pipe.close();
+                    socket.close();
+                    return;
+                } 
+                std::string message = receive_future.get();
 
                 if (message == "") {
                     spdlog::warn("Received empty message");
@@ -96,7 +107,9 @@ void handle_socket(asio::ip::tcp::socket& socket) {
                     message = receive_message(key, std::stoul(message_parts[1]), message_parts[2]);
                     spdlog::info("Received Message: {}", message);
                 } else if (message_parts[0] == "CLOSE") {
-                    break;
+                    pipe.close();
+                    socket.close();
+                    return;
                 } else {
                     tls_util.handle_message(message_parts);
                 }

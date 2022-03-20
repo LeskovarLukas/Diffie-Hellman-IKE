@@ -15,6 +15,7 @@ int main(int argc, char* argv[]) {
 
     std::string host = "localhost";
     int port = 4433;
+    int delay = 0;
     spdlog::level::level_enum log_level = spdlog::level::info;
     std::map<std::string, spdlog::level::level_enum> log_level_map = {
         {"trace", spdlog::level::trace},
@@ -28,6 +29,7 @@ int main(int argc, char* argv[]) {
 
     app.add_option("-n,--hostname", host, "Hostname");
     app.add_option("-p,--port", port, "Port");
+    app.add_option("-d,--delay", delay, "Delay");
     app.add_option("-l,--log-level", log_level, "Log level")->transform(CLI::CheckedTransformer(log_level_map, CLI::ignore_case));
 
 
@@ -37,6 +39,7 @@ int main(int argc, char* argv[]) {
 
     try {
         Pipe pipe(host, std::to_string(port));
+        pipe.set_delay(std::chrono::milliseconds(delay));
         BigInt key; 
 
         TLS_Util tls_util(pipe, key);
