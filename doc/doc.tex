@@ -1,0 +1,92 @@
+\documentclass[12pt, letterpaper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{cite}
+\usepackage{float}
+\usepackage{tikz}
+\usepackage{hyperref}
+\usepackage[newfloat]{minted}
+\usepackage{caption}
+\usepackage{dirtree}
+\tolerance=1
+\emergencystretch=\maxdimen
+\hyphenpenalty=10000
+\hbadness=10000
+
+\newenvironment{code}{\captionsetup{type=listing}}{}
+\SetupFloatingEnvironment{listing}{name=Source Code}
+
+\graphicspath{{img/}}
+
+\title{Simulation of TLS (42)}
+\author{Leskovar Lukas Andreios (KatNr), 5BHIF}
+\date{March 2022}
+
+\begin{document}
+
+\begin{titlepage}
+\maketitle
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\section{Introduction}
+...
+
+\section{Class-diagram}
+
+
+\subsection{Classes}
+
+
+\section{Implementation}
+
+
+\subsection{TLS 1.0}
+
+
+\subsubsection{Key Generation}
+
+
+\subsubsection{Handshake}
+
+
+\section{Description of code-blocks}
+
+
+\subsection{TLS}
+
+
+\subsection{Protobuf \& gRPC}
+
+
+\subsection{External Libraries}
+\label{extBib}
+
+\subsubsection{CLI11}
+
+
+\subsubsection{spdlog}
+
+
+\subsubsection{JSON}
+
+
+\section{Usage}
+\label{usage}
+
+\subsection{Command Line Arguments}
+
+\subsubsection{Configuration}
+
+
+\newpage
+
+\section{Project Structure}
+
+
+% .bib include & references
+\newpage
+\bibliography{references}
+\bibliographystyle{plain}
+\end{document}
