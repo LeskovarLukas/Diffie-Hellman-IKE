@@ -42,3 +42,15 @@ build/*
 
 # Misc
 .DS_Store
+
+# Latex
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.toc
+_minted-doc/
