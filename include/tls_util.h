@@ -2,7 +2,6 @@
 
 #include <spdlog/spdlog.h>
 
-#include "pipe.h"
 #include "utility.h"
 
 
