@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+package tls;
+
+enum MessageType {
+    // Application data messages
+    DATA = 1;
+    CLOSE = 2;
+
+    //Handshake messages
+    CLIENT_HELLO = 10;
+    SERVER_HELLO = 11;
+    CERTIFICATE = 12;
+    SERVER_HELLO_DONE = 13;
+    CLIENT_KEY_EXCHANGE = 14;
+    CHANGE_CIPHER_SPEC = 15;
+    FINISHED = 16;
+    ABORT = 17;
+}
+
+enum FinishedType {
+    CLIENT_FINISHED = 1;
+    SERVER_FINISHED = 2;
+}
+
+
+message ApplicationData {
+    MessageType type = 1;
+    uint32 size = 2;
+    string message = 3;
+}
+
+message Close {
+    MessageType type = 1;
+}
+
+message ClientHello {
+    MessageType type = 1;
+}
+
+message ServerHello {
+    MessageType type = 1;
+    int32 prime_group = 2;
+}
+
+message Certificate {
+    MessageType type = 1;
+    string public_key = 2;
+}
+
+message ServerHelloDone {
+    MessageType type = 1;
+}
+
+message ClientKeyExchange {
+    MessageType type = 1;
+    string public_key = 2;
+}
+
+message ChangeCipherSpec {
+    MessageType type = 1;
+}
+
+message Finished {
+    MessageType type = 1;
+    FinishedType party = 2;
+    string protocol = 3;
+}
+
+message  Abort {
+    MessageType type = 1;
+}
