@@ -28,7 +28,7 @@ public:
                         break;
                     }
 
-                    pipe << "TYPE_DATA|" + send_message(key, input);
+                    pipe << "TYPE_DATA|" + Utility::send_message(key, input);
                 } else if (tls_util.is_establishing()) {
                     std::string message;
                     pipe >> message;
@@ -38,7 +38,7 @@ public:
                         continue;
                     }
                     std::vector<std::string> message_parts;
-                    split_message(message, message_parts);
+                    Utility::split_message(message, message_parts);
 
                     tls_util.handle_message(message_parts);
                 } else {

@@ -2,6 +2,7 @@
 
 #include <spdlog/spdlog.h>
 
+#include "pipe.h"
 #include "utility.h"
 
 
@@ -63,9 +64,9 @@ public:
                 pipe << "TYPE_SERVERHELLO|PRIMEGROUP_" + std::to_string(primeGroup);
 
                 // Calculate server public and private key
-                read_primes_json("../modp_primes.json", primeGroup, G, P);
+                Utility::read_primes_json("../modp_primes.json", primeGroup, G, P);
 
-                s = generate_random_number(1, P);
+                s = Utility::generate_random_number(1, P);
                 S = pow(G, s.to_int()) % P;
 
                 // Send public key to client
@@ -78,9 +79,9 @@ public:
             } else if (messageType == "SERVERHELLO") {
                 // Calculate client public and private key
                 primeGroup = std::stoi(message_parts[1]);
-                read_primes_json("../modp_primes.json", primeGroup, G, P);
+                Utility::read_primes_json("../modp_primes.json", primeGroup, G, P);
 
-                c = generate_random_number(1, P);
+                c = Utility::generate_random_number(1, P);
                 C = pow(G, c.to_int()) % P;
 
             } else if (messageType == "CERTIFICATE") {
@@ -107,7 +108,7 @@ public:
                 localProtocol.resize(66);
 
                 // Client finished
-                pipe << "TYPE_FINISHED|"  + send_message(key, localProtocol) + "|PARTY_CLIENT";
+                pipe << "TYPE_FINISHED|"  + Utility::send_message(key, localProtocol) + "|PARTY_CLIENT";
             } else if (messageType == "CLIENTKEYEXCHANGE") {
                 // Receive client public key 
                 C = BigInt(message_parts[1]);
@@ -126,7 +127,7 @@ public:
                 }
 
                 // Receive partner protocol (client and server)
-                partnerProtocol = receive_message(key, std::stoul(message_parts[1]), message_parts[2]);
+                partnerProtocol = Utility::receive_message(key, std::stoul(message_parts[1]), message_parts[2]);
                 partnerProtocol.resize(66);
 
                 if (message_parts[3] == "CLIENT") {         // Server receives client finished
@@ -141,7 +142,7 @@ public:
                     localProtocol.resize(66);
 
                     if (check_protocols()) {
-                        pipe << "TYPE_FINISHED|"  + send_message(key, localProtocol) + "|PARTY_SERVER";
+                        pipe << "TYPE_FINISHED|" + Utility::send_message(key, localProtocol) + "|PARTY_SERVER";
                         currentState = State::SECURED;
                         spdlog::info("TLS_Util::handle_message() - TLS connection established");
                     } else {

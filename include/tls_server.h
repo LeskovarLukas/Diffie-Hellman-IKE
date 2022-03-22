@@ -44,10 +44,10 @@ private:
                     }
 
                     std::vector<std::string> message_parts;
-                    split_message(message, message_parts);
+                    Utility::split_message(message, message_parts);
                     
                     if (message_parts[0] == "DATA" && tls_util.is_secure()) {
-                        message = receive_message(key, std::stoul(message_parts[1]), message_parts[2]);
+                        message = Utility::receive_message(key, std::stoul(message_parts[1]), message_parts[2]);
                         spdlog::info("Received Message: {}", message);
                     } else if (message_parts[0] == "CLOSE") {
                         pipe.close();
