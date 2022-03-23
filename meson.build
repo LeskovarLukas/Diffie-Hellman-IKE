@@ -45,8 +45,8 @@ generated = gen.process('src/Message.proto')
 
 
 inc_dir = include_directories('include')
-client_src = ['src/tls_client/main.cpp']
-server_src = ['src/tls_server/main.cpp']
+client_src = ['src/client.cpp']
+server_src = ['src/server.cpp', 'src/tls_server.cpp']
 
 
 executable('tls_client',
