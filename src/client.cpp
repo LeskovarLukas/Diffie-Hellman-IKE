@@ -1,6 +1,6 @@
 #include <iostream>
-#include <asio.hpp>
-#include <spdlog/spdlog.h>
+
+#include "tls_client.h"
 
 
 int main() {
@@ -10,26 +10,11 @@ int main() {
     try {
         asio::io_context io_context;
 
-        asio::ip::tcp::resolver resolver(io_context);
-        asio::ip::tcp::resolver::results_type endpoints = resolver.resolve("localhost", "4433");
+        TLS_Client client(io_context, "localhost", "4433");
+        client.run();
 
-        asio::ip::tcp::socket socket(io_context);
-        asio::connect(socket, endpoints);
-
-        spdlog::info("Connected to server");
-        while (true) {
-            spdlog::debug("Status: {}", socket.is_open());
-            std::string message;
-            std::getline(std::cin, message);
-
-            asio::write(socket, asio::buffer(message));
-
-            if (message == "quit") {
-                break;
-            }
-        }
     } catch (std::exception& e) {
-        spdlog::error("Exception: {}", e.what());
+        spdlog::error("Client - Exception: {}", e.what());
     }
 
     return 0;

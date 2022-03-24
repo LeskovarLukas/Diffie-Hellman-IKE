@@ -1,7 +1,5 @@
 #pragma once
 
-#include <asio.hpp>
-#include <spdlog/spdlog.h>
 
 #include "session.hpp"
 
@@ -10,7 +8,7 @@ class TLS_Server {
 private: 
     asio::io_context& io_context;
     asio::ip::tcp::acceptor acceptor;
-    std::vector<std::shared_ptr<session>> sessions;
+    std::vector<std::shared_ptr<Session>> sessions;
 
 
     void start_accept();

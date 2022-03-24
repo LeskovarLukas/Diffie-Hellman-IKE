@@ -8,7 +8,7 @@ void TLS_Server::start_accept() {
         [this](const std::error_code& ec, asio::ip::tcp::socket socket) {
             if (!ec) {
                 spdlog::info("Server - Accepted connection");
-                auto new_session = std::make_shared<session>(std::move(socket));
+                auto new_session = std::make_shared<Session>(std::move(socket));
                 new_session->start();
                 sessions.push_back(new_session);
 

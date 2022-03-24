@@ -6,7 +6,7 @@
 #include "pipe.hpp"
 
 
-class session {
+class Session {
 private:
     Pipe pipe;
 
@@ -28,7 +28,7 @@ private:
     }
 
 public:
-    session(asio::ip::tcp::socket socket): 
+    Session(asio::ip::tcp::socket socket): 
         pipe(Pipe(std::move(socket))) {
             
         spdlog::debug("Session - Creating session");
