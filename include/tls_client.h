@@ -1,9 +1,10 @@
 #pragma once
 
 #include "session.hpp"
+#include "tls_observer.hpp"
 
 
-class TLS_Client {
+class TLS_Client: public TLS_Observer, public std::enable_shared_from_this<TLS_Observer> {
 private:
     asio::io_context& io_context;
     asio::ip::tcp::resolver resolver;
@@ -15,4 +16,6 @@ public:
     TLS_Client(asio::io_context& io_context, std::string host, std::string port);
 
     void run();
+
+    void notify(std::string message);
 };

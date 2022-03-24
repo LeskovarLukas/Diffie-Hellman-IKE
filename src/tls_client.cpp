@@ -15,6 +15,8 @@ TLS_Client::TLS_Client(asio::io_context& io_context, std::string host, std::stri
 
 
 void TLS_Client::run() {
+    session->subscribe(shared_from_this());
+
     while (true) {
         std::string message;
         std::getline(std::cin, message);
@@ -25,5 +27,10 @@ void TLS_Client::run() {
             break;
         }
     }
+}
+
+
+void TLS_Client::notify(std::string message) {
+    spdlog::info("Client - Received message: {}", message);
 }
 

@@ -9,6 +9,7 @@ void TLS_Server::start_accept() {
             if (!ec) {
                 spdlog::info("Server - Accepted connection");
                 auto new_session = std::make_shared<Session>(std::move(socket));
+                new_session->subscribe(shared_from_this());
                 new_session->start();
                 sessions.push_back(new_session);
 
@@ -25,4 +26,9 @@ TLS_Server::TLS_Server(asio::io_context& io_context):
     acceptor(io_context, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), 4433)) {
 
     start_accept();
+}
+
+
+void TLS_Server::notify(std::string message) {
+    spdlog::info("Server - Received message: {}", message);
 }

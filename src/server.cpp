@@ -9,7 +9,7 @@ int main() {
     try {
         asio::io_context io_context(1);
 
-        TLS_Server server(io_context);
+        std::shared_ptr<TLS_Server> server_ptr = std::make_shared<TLS_Server>(io_context);
 
         io_context.run();
 
