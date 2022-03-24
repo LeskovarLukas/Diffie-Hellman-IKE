@@ -29,8 +29,8 @@ private:
 
 public:
     session(asio::ip::tcp::socket socket): 
-        pipe(std::move(socket)) {
-        
+        pipe(Pipe(std::move(socket))) {
+            
         spdlog::debug("Session - Creating session");
     }
 

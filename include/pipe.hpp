@@ -4,27 +4,33 @@
 
 class Pipe {
 private:
-   asio::ip::tcp::socket socket;
+    std::shared_ptr<asio::ip::tcp::socket> socket;
 
 public:
-    Pipe(asio::ip::tcp::socket socket): socket(std::move(socket)) {
+    Pipe(asio::ip::tcp::socket socket) {
         spdlog::debug("Pipe - Creating pipe");
+        this->socket = std::make_shared<asio::ip::tcp::socket>(std::move(socket));
+    }
+
+    ~Pipe() {
+        spdlog::debug("Pipe - Destroying pipe");
+        socket->close();
     }
 
 
     operator bool() {
-        return socket.is_open();
+        return socket->is_open();
     }
 
 
     void send(const std::string& message) {
-        asio::write(socket, asio::buffer(message));
+        asio::write(*socket, asio::buffer(message));
     }
 
     void receive(std::string& message) {
         std::array<char, 128> buffer;
         asio::error_code error;
-        size_t length = socket.read_some(asio::buffer(buffer), error);
+        size_t length = socket->read_some(asio::buffer(buffer), error);
 
         if (error == asio::error::eof) {
             spdlog::debug("Pipe - Connection closed");
