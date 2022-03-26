@@ -3,8 +3,8 @@
 #include <asio.hpp>
 #include <spdlog/spdlog.h>
 
-#include "pipe.hpp"
-#include "tls_observer.hpp"
+#include "pipe.h"
+#include "tls_observer.h"
 
 
 class Session {
@@ -18,11 +18,11 @@ private:
     void listen_for_messages() {
         spdlog::debug("Session - Listening for messages");
         try {
-            while (true) {
-                std::string message;
+            while (pipe) {
+                tls::MessageWrapper message;
                 pipe.receive(message);
 
-                spdlog::info("Session - Received message: {}", message);
+                spdlog::debug("Session - Received message");
                 notify(message);
 
             }
@@ -31,7 +31,7 @@ private:
         }
     }
 
-    void notify(std::string message) {
+    void notify(tls::MessageWrapper message) {
         for (auto observer : observers) {
             observer->notify(message);
         }
@@ -44,6 +44,11 @@ public:
         spdlog::debug("Session - Creating session");
     }
 
+    ~Session() {
+        spdlog::debug("Session - Destroying session");
+        listen_thread.join();
+    }
+
     void start() {
         spdlog::debug("Session - Starting session");
 
@@ -53,7 +58,7 @@ public:
         listen_thread.detach();
     }
 
-    void send(const std::string& message) {
+    void send(tls::MessageWrapper message) {
         spdlog::debug("Session - Sending message");
         pipe.send(message);
     }

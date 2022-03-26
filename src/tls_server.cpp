@@ -29,6 +29,11 @@ TLS_Server::TLS_Server(asio::io_context& io_context):
 }
 
 
-void TLS_Server::notify(std::string message) {
-    spdlog::info("Server - Received message: {}", message);
+void TLS_Server::notify(tls::MessageWrapper message) {
+    spdlog::debug("Server - Received message {}", message.type());
+
+    if (message.type() == tls::MessageType::DATA) {
+        tls::MessageWrapper::ApplicationData application_data = message.application_data();
+        spdlog::info("Server - Received message: {}", application_data.data());
+    }
 }

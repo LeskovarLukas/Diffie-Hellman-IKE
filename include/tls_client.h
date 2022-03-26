@@ -1,7 +1,7 @@
 #pragma once
 
-#include "session.hpp"
-#include "tls_observer.hpp"
+#include "session.h"
+#include "tls_observer.h"
 
 
 class TLS_Client: public TLS_Observer, public std::enable_shared_from_this<TLS_Observer> {
@@ -17,5 +17,5 @@ public:
 
     void run();
 
-    void notify(std::string message);
+    void notify(tls::MessageWrapper message);
 };

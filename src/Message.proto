@@ -4,69 +4,92 @@ package tls;
 
 enum MessageType {
     // Application data messages
-    DATA = 1;
-    CLOSE = 2;
+    DATA = 0;
+    CLOSE = 1;
 
     //Handshake messages
-    CLIENT_HELLO = 10;
-    SERVER_HELLO = 11;
-    CERTIFICATE = 12;
-    SERVER_HELLO_DONE = 13;
-    CLIENT_KEY_EXCHANGE = 14;
-    CHANGE_CIPHER_SPEC = 15;
-    FINISHED = 16;
-    ABORT = 17;
+    CLIENT_HELLO = 2;
+    SERVER_HELLO = 3;
+    CERTIFICATE = 4;
+    SERVER_HELLO_DONE = 5;
+    CLIENT_KEY_EXCHANGE = 6;
+    CHANGE_CIPHER_SPEC = 7;
+    FINISHED = 8;
+    ABORT = 9;
 }
 
 enum FinishedType {
-    CLIENT_FINISHED = 1;
-    SERVER_FINISHED = 2;
+    CLIENT_FINISHED = 0;
+    SERVER_FINISHED = 1;
 }
 
 
-message ApplicationData {
+message MessageWrapper {
     MessageType type = 1;
-    uint32 size = 2;
-    string message = 3;
-}
 
-message Close {
-    MessageType type = 1;
-}
+    message ApplicationData {
+        uint32 size = 2;
+        string data = 3;
+    }
 
-message ClientHello {
-    MessageType type = 1;
-}
+    optional ApplicationData application_data = 2;
 
-message ServerHello {
-    MessageType type = 1;
-    int32 prime_group = 2;
-}
 
-message Certificate {
-    MessageType type = 1;
-    string public_key = 2;
-}
+    message Close {
+    }
 
-message ServerHelloDone {
-    MessageType type = 1;
-}
+    optional Close close = 3;
 
-message ClientKeyExchange {
-    MessageType type = 1;
-    string public_key = 2;
-}
 
-message ChangeCipherSpec {
-    MessageType type = 1;
-}
+    message ClientHello {
+    }
 
-message Finished {
-    MessageType type = 1;
-    FinishedType party = 2;
-    string protocol = 3;
-}
+    optional ClientHello client_hello = 4;
 
-message  Abort {
-    MessageType type = 1;
+
+    message ServerHello {
+        int32 prime_group = 2;
+    }
+
+    optional ServerHello server_hello = 5;
+
+
+    message Certificate {
+        string public_key = 2;
+    }
+
+    optional Certificate certificate = 6;
+
+
+    message ServerHelloDone {
+    }
+
+    optional ServerHelloDone server_hello_done = 7;
+
+
+    message ClientKeyExchange {
+        string public_key = 2;
+    }
+
+    optional ClientKeyExchange client_key_exchange = 8;
+
+
+    message ChangeCipherSpec {
+    }
+
+    optional ChangeCipherSpec change_cipher_spec = 9;
+
+
+    message Finished {
+        FinishedType party = 2;
+        string protocol = 3;
+    }
+
+    optional Finished finished = 10;
+
+
+    message  Abort {
+    }
+
+    optional Abort abort = 11;
 }

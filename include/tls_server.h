@@ -1,8 +1,8 @@
 #pragma once
 
 
-#include "session.hpp"
-#include "tls_observer.hpp"
+#include "session.h"
+#include "tls_observer.h"
 
 
 class TLS_Server: public TLS_Observer, public std::enable_shared_from_this<TLS_Observer> {
@@ -18,5 +18,5 @@ private:
 public:
     TLS_Server(asio::io_context& io_context);
 
-    void notify(std::string message);
+    void notify(tls::MessageWrapper message);
 };

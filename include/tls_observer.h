@@ -6,7 +6,7 @@ class TLS_Observer {
 public:
     virtual ~TLS_Observer() {}
 
-    virtual void notify(std::string message) = 0;
+    virtual void notify(tls::MessageWrapper message) = 0;
 };
 
 typedef std::shared_ptr<TLS_Observer> TLS_Observer_ptr;
