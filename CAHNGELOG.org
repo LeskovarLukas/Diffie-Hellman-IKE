@@ -1,4 +1,11 @@
 * Changelog
+** [0.2.0] - 2022-03-27
+** Changed
+- Server is now asynchronous
+- Client and Server use session class
+** Added
+- Protobuf
+- Observer pattern for receiving messages
 ** [0.1.2] - 2022-03-20
 *** Changed
 - Error handling

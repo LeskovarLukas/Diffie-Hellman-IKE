@@ -1,6 +1,8 @@
 #pragma once
 
 #include <asio.hpp>
+#include <spdlog/spdlog.h>
+
 #include "Message.pb.h"
 
 class Pipe {

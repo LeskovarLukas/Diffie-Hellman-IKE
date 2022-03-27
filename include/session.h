@@ -1,8 +1,5 @@
 #pragma once
 
-#include <asio.hpp>
-#include <spdlog/spdlog.h>
-
 #include "pipe.h"
 #include "tls_observer.h"
 
@@ -10,6 +7,7 @@
 class Session {
 private:
     Pipe pipe;
+    unsigned int session_id;
     std::vector<std::shared_ptr<TLS_Observer>> observers;
 
     std::thread listen_thread;
@@ -33,13 +31,13 @@ private:
 
     void notify(tls::MessageWrapper message) {
         for (auto observer : observers) {
-            observer->notify(message);
+            observer->notify(message, session_id);
         }
     }
 
 public:
-    Session(asio::ip::tcp::socket socket): 
-        pipe(Pipe(std::move(socket))) {
+    Session(asio::ip::tcp::socket socket, unsigned int session_id): 
+        pipe(Pipe(std::move(socket))), session_id(session_id) {
             
         spdlog::debug("Session - Creating session");
     }
@@ -66,9 +64,16 @@ public:
 
     void subscribe(TLS_Observer_ptr observer) {
         observers.push_back(observer);
+        spdlog::debug("Session - New observer");
     }
 
     void unsubscribe(TLS_Observer_ptr observer) {
         observers.erase(std::remove(observers.begin(), observers.end(), observer), observers.end());
+        spdlog::debug("Session - Observer removed");
+    }
+
+
+    unsigned int get_session_id() const {
+        return session_id;
     }
 };

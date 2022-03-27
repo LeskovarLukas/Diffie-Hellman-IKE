@@ -81,7 +81,8 @@ message MessageWrapper {
 
 
     message Finished {
-        FinishedType party = 2;
+        FinishedType party = 1;
+        uint32 size = 2;
         string protocol = 3;
     }
 
