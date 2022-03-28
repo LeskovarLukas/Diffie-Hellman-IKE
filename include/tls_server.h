@@ -1,8 +1,10 @@
 #pragma once
 
 #include <spdlog/spdlog.h>
+
 #include "session.h"
 #include "tls_handshake_agent.h"
+#include "utility.h"
 
 
 class TLS_Server: public TLS_Observer, public std::enable_shared_from_this<TLS_Observer> {
@@ -53,7 +55,7 @@ public:
             std::shared_ptr<TLS_Handshake_Agent> handshake_agent = handshake_agents.at(session_id);
 
             if (handshake_agent->is_secure()) {
-                BigInt key = handshake_agent->get_key();
+                std::string key = handshake_agent->get_key();
                 unsigned long size = message.application_data().size();
                 std::string decrypted_message = Utility::receive_message(key, size, message.application_data().data());
                 std::cout << "Session " << session_id << " > " << decrypted_message << std::endl;
@@ -76,7 +78,7 @@ public:
         std::shared_ptr<TLS_Handshake_Agent> handshake_agent = handshake_agents.at(session_id);
 
         if (handshake_agent->is_secure()) {
-            BigInt key = handshake_agent->get_key();
+            std::string key = handshake_agent->get_key();
             unsigned long size;
             std::string encrypted_message = Utility::send_message(key, size, input);
             tls::MessageWrapper message = Messagebuilder::build_application_message(size, encrypted_message);
