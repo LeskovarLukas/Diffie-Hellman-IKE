@@ -1,6 +1,6 @@
 #pragma once
 
-
+#include <spdlog/spdlog.h>
 #include "session.h"
 #include "tls_handshake_agent.h"
 

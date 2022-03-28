@@ -1,7 +1,26 @@
+
+# spdlog: https://github.com/gabime/spdlog
+add_global_arguments('-I' + get_option('spdlog_include_dir'), language : 'cpp')
+
+# begin protobuf: https://developers.google.com/protocol-buffers/
+# protobuf: must be installed independently and has to be found...
+protoc = find_program('protoc', required : true)
+protobuf_dep = dependency('protobuf', required : true)
+
+gen = generator(protoc, \
+  output    : ['@BASENAME@.pb.cc', '@BASENAME@.pb.h'],
+  arguments : ['--proto_path=@CURRENT_SOURCE_DIR@/src', '--cpp_out=@BUILD_DIR@', '@PLAINNAME@'])
+
+# change proto file accordingly
+generated = gen.process('src/Message.proto')
+# end protobuf
+
+
 tls_util_inc_dir = include_directories('include')
 
-src = []
+src = ['src/pipe.cpp', generated]
 
 tls_util_lib = static_library('tls_util',
                                 sources: src,
+                                dependencies: [protobuf_dep],
                                 include_directories: tls_util_inc_dir)
