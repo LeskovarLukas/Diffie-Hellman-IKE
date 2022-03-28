@@ -38,41 +38,43 @@ public:
 
         handshake_agent->initiate_handshake();
 
-        while (true) {
-            std::string input;
-            std::getline(std::cin, input);
+        while (session) {
+            if (!handshake_agent->is_establishing()) {
+                std::string input;
+                std::getline(std::cin, input);
 
-            tls::MessageWrapper message;
-            if (handshake_agent->is_secure()) {
-                BigInt key = handshake_agent->get_key();
-                unsigned long size;
-                std::string encrypted_message = Utility::send_message(key, size, input);
-                message = Messagebuilder::build_application_message(size, encrypted_message);
-            } else {
-                message = Messagebuilder::build_application_message(input.size(), input);
-            }
+                tls::MessageWrapper message;
+                if (handshake_agent->is_secure()) {
+                    BigInt key = handshake_agent->get_key();
+                    unsigned long size;
+                    std::string encrypted_message = Utility::send_message(key, size, input);
+                    message = Messagebuilder::build_application_message(size, encrypted_message);
+                } else {
+                    message = Messagebuilder::build_application_message(input.size(), input);
+                }
 
-            session->send(message);
+                session->send(message);
 
-            if (input == "quit") {
-                break;
+                if (input == "quit") {
+                    break;
+                }
             }
         }
     }
 
 
     void notify(tls::MessageWrapper message, unsigned int session_id) {
-        spdlog::debug("Client Session {} - Received message {}", session_id, message.type());
+        spdlog::debug("Client Session {} - Received message type {}", session_id, message.type());
 
         if (message.type() == tls::MessageType::DATA) {
             if (handshake_agent->is_secure()) {
                 BigInt key = handshake_agent->get_key();
                 unsigned long size = message.application_data().size();
                 std::string decrypted_message = Utility::receive_message(key, size, message.application_data().data());
-                spdlog::info("Client - Received message: {}", decrypted_message);
+                std::cout << "> " << decrypted_message << std::endl;
             } else {
                 spdlog::warn("Client - Received unsecure message");
-                spdlog::info("Client - Received message: {}", message.application_data().data());
+                std::cout << "> " << message.application_data().data() << std::endl;
             }
         }
     }

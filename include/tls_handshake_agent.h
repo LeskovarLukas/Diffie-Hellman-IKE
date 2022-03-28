@@ -177,13 +177,12 @@ private:
             localProtocol.resize(66);
 
 
-            std::cout << localProtocol << "\n" << partnerProtocol << std::endl;
             if (check_protocols()) {
                 unsigned long size;
                 std::string encrypted_protocol = Utility::send_message(key, size, localProtocol);
                 session->send(Messagebuilder::build_finished_message(tls::FinishedType::SERVER_FINISHED, size, encrypted_protocol));
-                currentState = State::SECURED;
                 spdlog::info("TLS_Handshake_Agent::handle_message() - TLS connection established");
+                currentState = State::SECURED;
             } else {
                 currentState = State::UNSECURED;
                 throw new std::runtime_error("TLS_Handshake_Agent::handle_message() - Protocols do not match");
@@ -191,8 +190,8 @@ private:
             
         } else if (message.mutable_finished()->party() == tls::FinishedType::SERVER_FINISHED) {      // Client receives server finished
             if (check_protocols()) {
-                currentState = State::SECURED;
                 spdlog::info("TLS_Handshake_Agent::handle_message() - TLS connection established");
+                currentState = State::SECURED;
             } else {
                 currentState = State::UNSECURED;
                 throw new std::runtime_error("TLS_Handshake_Agent::handle_message() - Protocols do not match");
