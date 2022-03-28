@@ -49,14 +49,19 @@ client_src = ['src/client.cpp', generated]
 server_src = ['src/server.cpp', generated]
 
 
+subdir('tls_util')
+
+
 executable('tls_client',
            sources: client_src,
-           include_directories: inc_dir,
-           dependencies: [thread_dep, protobuf_dep]
+           include_directories: [inc_dir, tls_util_inc_dir],
+           dependencies: [thread_dep, protobuf_dep],
+           link_with: tls_util_lib
           )   
 
 executable('tls_server',
            sources: server_src,
-           include_directories: inc_dir,
-           dependencies: [thread_dep, protobuf_dep]
+           include_directories: [inc_dir, tls_util_inc_dir],
+           dependencies: [thread_dep, protobuf_dep],
+           link_with: tls_util_lib
           )    
