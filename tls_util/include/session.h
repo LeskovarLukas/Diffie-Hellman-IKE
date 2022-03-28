@@ -13,67 +13,24 @@ private:
     std::thread listen_thread;
 
 
-    void listen_for_messages() {
-        spdlog::debug("Session - Listening for messages");
-        try {
-            while (pipe) {
-                tls::MessageWrapper message;
-                pipe.receive(message);
+    void listen_for_messages();
 
-                spdlog::debug("Session - Received message");
-                notify(message);
-
-            }
-        } catch (std::exception& e) {
-            spdlog::error("Session - Exception: {}", e.what());
-        }
-    }
-
-    void notify(tls::MessageWrapper message) {
-        for (auto observer : observers) {
-            observer->notify(message, session_id);
-        }
-    }
+    void notify(tls::MessageWrapper message);
 
 public:
-    Session(asio::ip::tcp::socket socket, unsigned int session_id): 
-        pipe(Pipe(std::move(socket))), session_id(session_id) {
-            
-        spdlog::debug("Session - Creating session");
-    }
+    Session(asio::ip::tcp::socket socket, unsigned int session_id);
 
-    ~Session() {
-        spdlog::debug("Session - Destroying session");
-        listen_thread.join();
-    }
+    ~Session();
 
-    void start() {
-        spdlog::debug("Session - Starting session");
+    void start();
 
-        listen_thread = std::thread([this] {
-            listen_for_messages();
-        });
-        listen_thread.detach();
-    }
-
-    void send(tls::MessageWrapper message) {
-        spdlog::debug("Session - Sending message");
-        pipe.send(message);
-    }
+    void send(tls::MessageWrapper message);
 
 
-    void subscribe(TLS_Observer_ptr observer) {
-        observers.push_back(observer);
-        spdlog::debug("Session - New observer");
-    }
+    void subscribe(TLS_Observer_ptr observer);
 
-    void unsubscribe(TLS_Observer_ptr observer) {
-        observers.erase(std::remove(observers.begin(), observers.end(), observer), observers.end());
-        spdlog::debug("Session - Observer removed");
-    }
+    void unsubscribe(TLS_Observer_ptr observer);
 
 
-    unsigned int get_session_id() const {
-        return session_id;
-    }
+    unsigned int get_session_id() const;
 };

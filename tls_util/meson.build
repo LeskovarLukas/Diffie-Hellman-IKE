@@ -18,7 +18,7 @@ generated = gen.process('src/Message.proto')
 
 tls_util_inc_dir = include_directories('include')
 
-src = ['src/pipe.cpp', generated]
+src = ['src/pipe.cpp', 'src/session.cpp', generated]
 
 tls_util_lib = static_library('tls_util',
                                 sources: src,
