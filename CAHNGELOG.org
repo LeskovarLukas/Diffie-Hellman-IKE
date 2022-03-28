@@ -1,4 +1,15 @@
 * Changelog
+** [0.2.0] - 2022-03-27
+** Changed
+- Server is now asynchronous
+- Client and Server use session class
+- Client and Server use CLI11 again
+** Added
+- Protobuf
+- Observer pattern for receiving messages
+*** Removed
+- Timeout
+- delay in pipe
 ** [0.1.2] - 2022-03-20
 *** Changed
 - Error handling

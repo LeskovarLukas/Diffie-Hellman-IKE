@@ -1,14 +1,13 @@
 #pragma once
 
-#include <iostream>
 #include <string>
 #include <vector>
 #include <fstream>
 #include <json.hpp>
 #include <spdlog/spdlog.h>
 
-#include "BigInt/BigInt.hpp"
 #include "PicoSHA2/picosha2.h"
+#include "BigInt/BigInt.hpp"
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-compare"
@@ -16,11 +15,12 @@
 #pragma GCC diagnostic pop
 
 
-using json = nlohmann::json;
-
 class Utility {
 private:
-    inline static const unsigned char iv[16] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
+    inline static const unsigned char iv[16] = {
+        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+        0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f
+    };
 
 
 public:
@@ -29,17 +29,8 @@ public:
     General Utility Functions
     */
 
-    static void split_message(std::string& message, std::vector<std::string>& parts) {
-        std::stringstream ss(message);
-        std::string part;
-        while (std::getline(ss, part, '|')) {
-            part = part.substr(part.find_first_of('_') + 1);
-            parts.push_back(part);
-        }
-    }
 
-
-    static BigInt generate_random_number(BigInt min=0, BigInt max=0) {
+    static BigInt generate_random_number(BigInt min, BigInt max) {
         int randomData = open("/dev/urandom", O_RDONLY);
         return (randomData % (max - min + 1)) + min;
     }
@@ -51,7 +42,7 @@ public:
             std::cout << "Error opening file" << std::endl;
             return;                      
         }
-        json primes;
+        nlohmann::json primes;
         file >> primes;
         file.close();
         g = int(primes["groups"][id]["g"]); 
@@ -197,19 +188,19 @@ public:
     Messaging Functions
     */
 
-    static std::string send_message(BigInt& key, std::string& message) {
+    static std::string send_message(BigInt& key, unsigned long& size, std::string message) {
         if (message == "") {
             throw std::runtime_error("Message empty!");
         }
-        unsigned long size = 0;
+        size = 0;
         std::string encrypted = Utility::encrypt(message, size, key.to_string());
         spdlog::debug("Encrypted message: {}", encrypted);
 
-        return "SIZE_" + std::to_string(size) + "|" + "MSG_" + Utility::encode_base64(encrypted);
+        return Utility::encode_base64(encrypted);
     }
 
 
-    static std::string receive_message(BigInt& key, unsigned long size, std::string& message) {
+    static std::string receive_message(BigInt& key, unsigned long size, std::string message) {
         if (message == "") {
             throw std::runtime_error("Message empty!");
         }

@@ -1,69 +1,80 @@
 #pragma once
 
-#include "tls_util.h"
+#include <iostream>
+#include "session.h"
+#include "tls_handshake_agent.h"
+#include "messagebuilder.h"
 
-class TLS_Client {
+
+class TLS_Client: public TLS_Observer, public std::enable_shared_from_this<TLS_Observer> {
 private:
-    Pipe& pipe;
-    BigInt key;
-    TLS_Util tls_util;
+    asio::io_context& io_context;
+    asio::ip::tcp::resolver resolver;
+    asio::ip::tcp::socket socket;
+    asio::ip::tcp::resolver::results_type endpoints;
+    std::shared_ptr<Session> session;
+    std::shared_ptr<TLS_Handshake_Agent> handshake_agent;
 
-public:
-    TLS_Client(Pipe& pipe): pipe{pipe}, tls_util{pipe, key} {
-        tls_util.initiate_handshake();
+
+public: 
+    TLS_Client(asio::io_context& io_context, std::string host, std::string port):
+        io_context(io_context),
+        resolver(io_context),
+        socket(io_context) {
+
+        endpoints = resolver.resolve(host, port);
+        asio::connect(socket, endpoints);
+        session = std::make_shared<Session>(std::move(socket), 0);
+        session->start();
+        spdlog::info("Client - Connected to {}:{}", host, port);
+
+        handshake_agent = std::make_shared<TLS_Handshake_Agent>(session);
+        session->subscribe(handshake_agent);
     }
 
 
     void run() {
-        while (true) {
-            try {
-                if (tls_util.is_secure()) {
-                    std::string input;
-                    std::cout << "Enter message: ";
-                    std::getline(std::cin, input);
+        session->subscribe(shared_from_this());
 
-                    if (input == "quit") {
-                        pipe << "TYPE_CLOSE";
-                        spdlog::info("Closing connection");
-                        break;
-                    }
+        handshake_agent->initiate_handshake();
 
-                    pipe << "TYPE_DATA|" + Utility::send_message(key, input);
-                } else if (tls_util.is_establishing()) {
-                    std::string message;
-                    pipe >> message;
+        while (session) {
+            if (!handshake_agent->is_establishing()) {
+                std::string input;
+                std::getline(std::cin, input);
 
-                    if (message == "") {
-                        spdlog::warn("Received empty message");
-                        continue;
-                    }
-                    std::vector<std::string> message_parts;
-                    Utility::split_message(message, message_parts);
-
-                    tls_util.handle_message(message_parts);
+                tls::MessageWrapper message;
+                if (handshake_agent->is_secure()) {
+                    BigInt key = handshake_agent->get_key();
+                    unsigned long size;
+                    std::string encrypted_message = Utility::send_message(key, size, input);
+                    message = Messagebuilder::build_application_message(size, encrypted_message);
                 } else {
-                    tls_util.initiate_handshake();
+                    message = Messagebuilder::build_application_message(input.size(), input);
                 }
-            } catch (std::exception& e) {
-                spdlog::warn(e.what());
 
-                if (!pipe) {
-                    spdlog::info("Trying to reconnect");
+                session->send(message);
 
-                    for (int i = 0; i < 10; i++) {
-                        try {
-                            pipe.try_reconnect();
-                            tls_util.reconnect();
-                            spdlog::info("Reconnected");
-                            break;
-                        } catch (std::exception& e) {
-                            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-                            if (i == 9) {
-                                throw std::runtime_error("Could not reconnect");
-                            }
-                        }
-                    }
+                if (input == "quit") {
+                    break;
                 }
+            }
+        }
+    }
+
+
+    void notify(tls::MessageWrapper message, unsigned int session_id) {
+        spdlog::debug("Client Session {} - Received message type {}", session_id, message.type());
+
+        if (message.type() == tls::MessageType::DATA) {
+            if (handshake_agent->is_secure()) {
+                BigInt key = handshake_agent->get_key();
+                unsigned long size = message.application_data().size();
+                std::string decrypted_message = Utility::receive_message(key, size, message.application_data().data());
+                std::cout << "> " << decrypted_message << std::endl;
+            } else {
+                spdlog::warn("Client - Received unsecure message");
+                std::cout << "> " << message.application_data().data() << std::endl;
             }
         }
     }

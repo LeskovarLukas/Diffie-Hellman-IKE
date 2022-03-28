@@ -1,14 +1,8 @@
 #include <iostream>
-#include <fstream>
-#include <spdlog/spdlog.h>
-#include <future>
 
 #include "CLI11.hpp"
-
 #include "tls_server.h"
 
-
-void handle_socket(asio::ip::tcp::socket&);
 
 int main(int argc, char* argv[]) {
     CLI::App app{"tls_server"};
@@ -34,11 +28,14 @@ int main(int argc, char* argv[]) {
     spdlog::set_level(log_level);
 
     try {
-        TLS_Server server(port);
-        server.listen_for_connections();
-        
+        asio::io_context io_context(1);
+
+        std::shared_ptr<TLS_Server> server_ptr = std::make_shared<TLS_Server>(io_context, port);
+
+        io_context.run();
+
     } catch (std::exception& e) {
-        spdlog::error(e.what());
+        spdlog::error("Server - Exception: {}", e.what());
     }
 
     return 0;
