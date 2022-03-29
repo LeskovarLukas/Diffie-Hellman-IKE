@@ -45,8 +45,8 @@ add_global_arguments('-I' + get_option('json_include_dir'), language : 'cpp')
 
 
 inc_dir = include_directories('include')
-client_src = ['src/client.cpp']
-server_src = ['src/server.cpp']
+client_src = ['src/client.cpp', 'src/tls_client.cpp']
+server_src = ['src/server.cpp', 'src/tls_server.cpp']
 
 
 subdir('tls_util')
