@@ -1,4 +1,5 @@
 #include <iostream>
+#include <spdlog/spdlog.h>
 
 #include "CLI11.hpp"
 #include "tls_client.h"
