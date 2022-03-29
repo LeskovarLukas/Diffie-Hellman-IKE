@@ -1,10 +1,15 @@
 * Changelog
+** [0.3.0] - Unreleased
+*** Changed
+- pipe, session, tls_handshake_agent modularized and in static lib
+- tls_client and tls_server modularized
+- meson.build cleanup
 ** [0.2.0] - 2022-03-27
-** Changed
+*** Changed
 - Server is now asynchronous
 - Client and Server use session class
 - Client and Server use CLI11 again
-** Added
+*** Added
 - Protobuf
 - Observer pattern for receiving messages
 *** Removed
