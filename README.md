@@ -12,3 +12,14 @@ Libraries in use:
 - [PicoSHA2](https://github.com/okdshin/PicoSHA2)
 
 For version history see [Changelog](https://github.com/LeskovarLukas/leskovar_project/blob/main/CAHNGELOG.org)
+
+## Installation 
+```
+git clone git@github.com:LeskovarLukas/leskovar_project.git
+```
+
+## Build
+```
+cd build && meson ..
+ninja -j 4
+```
