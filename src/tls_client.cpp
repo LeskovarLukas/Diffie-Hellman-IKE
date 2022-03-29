@@ -40,6 +40,7 @@ void TLS_Client::run() {
             } else {
                 message = Messagebuilder::build_application_message(input.size(), input);
             }
+            
             session->send(message);
 
             if (input == "quit") {
