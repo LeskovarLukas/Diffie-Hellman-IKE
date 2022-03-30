@@ -31,13 +31,7 @@
 \newpage
 
 \section{Introduction}
-...
-
-\section{Class-diagram}
-
-
-\subsection{Classes}
-
+The goal of this project was to simulate communication over Transport Layer Security (TLS) by implementing the Diffie-Hellman Internet Key Exchange (IKE). Any further communication was to be encrypted by a symmetric encryption algorithm.
 
 \section{Implementation}
 
@@ -51,25 +45,190 @@
 \subsubsection{Handshake}
 
 
+\section{Software Architecture}
+
+\subsection{Technologies}
+
+\begin{table}[h]
+	\centering
+	\begin{tabular}{l|l}
+		Purpose                       & Technology \\ \hline
+		Build Tool				 	  & Meson	   \\
+		Command line interface	      & CLI11      \\
+		Configuration files           & json       \\
+		Data serialization            & Protobuf   \\
+		Logging                       & spdlog     \\
+		Network Communication         & asio       \\
+		Programming Languages		  & C++ 17 \\
+		Encryption 					& plusaes \\
+		Hashing 					& PicoSHA2 \\
+		Large Integer Values & BigInt \\
+	\end{tabular}
+	\caption{This table lists all the technologies used in this project.}
+\end{table}
+
+\subsection{Classes}
+
+\subsection{Communication}
+
+
 \section{Description of code-blocks}
 
 
-\subsection{TLS}
+\subsection{Asio}
+Network communication between client and server is established by utilizing asio.
+
+\subsubsection{Client Connection}
+
+\begin{code}
+	\begin{minted}{cpp}
+TLS_Client::TLS_Client(
+  asio::io_context& io_context, 
+  std::string host, 
+  std::string port
+  )
+  : io_context(io_context),
+  resolver(io_context),
+  socket(io_context) 
+{	
+  endpoints = resolver.resolve(host, port);
+  asio::connect(socket, endpoints);
+  session = std::make_shared<Session>(std::move(socket), 0);
+  session->start();
+  spdlog::info("Client - Connected to {}:{}", host, port);
+	
+  handshake_agent = std::make_shared<TLS_Handshake_Agent>(session);
+  session->subscribe(handshake_agent);
+}
+	\end{minted}
+	\caption{Creation of socket connection on client side.}
+	\label{clientConnection}
+\end{code}
+
+\pagebreak
+
+\subsubsection{Server Connection}
+
+\begin{code}
+	\begin{minted}{cpp}
+void TLS_Server::start_accept() {
+  spdlog::info("Server - Starting accept");
+	
+  acceptor.async_accept(
+  [this](const std::error_code& ec, asio::ip::tcp::socket socket) {
+    if (!ec) {
+      spdlog::info("Server - Accepted connection");
+      auto new_session =  
+        std::make_shared<Session>(std::move(socket), sessions.size());
+      new_session->subscribe(shared_from_this());
+      new_session->start();
+      sessions.push_back(new_session);
+		
+      auto new_handshake_agent = 
+        std::make_shared<TLS_Handshake_Agent>(new_session);
+      new_session->subscribe(new_handshake_agent);
+      handshake_agents.push_back(new_handshake_agent);
+		
+      start_accept();
+    } else {
+      spdlog::error("Server - Error accepting connection: {}", ec.message());
+    }
+  });
+}
+	\end{minted}
+	\caption{Server asynchronously waiting for client connections.}
+	\label{serverConnection}
+\end{code}
+
+\subsection{Protobuf}
+Any data to be sent over TCP is serialized using Google Protobuf.
+
+\subsubsection{Message Serialization}
+\begin{code}
+	\begin{minted}{cpp}
+void Pipe::send(google::protobuf::Message& message) {
+  u_int64_t message_size{message.ByteSizeLong()};
+  asio::write(*socket, asio::buffer(&message_size, sizeof(message_size)));
+	
+  asio::streambuf buffer;
+  std::ostream os(&buffer);
+  message.SerializeToOstream(&os);
+  asio::write(*socket, buffer);
+	
+  spdlog::debug("Pipe - Sent message");
+}
+	\end{minted}
+	\caption{Server asynchronously waiting for client connections.}
+	\label{pipeSend}
+\end{code}
 
 
-\subsection{Protobuf \& gRPC}
+%Pipe Klasse 
+
+\subsection{TLS Handshake}
+Whenever a new message is received the TLS\_Handshake\_Agent class is responsible for handling and responding to any handshake related message.
+
+\subsection{Message Handling}
+
+\begin{code}
+	\begin{minted}{cpp}
+void TLS_Handshake_Agent::notify(
+  tls::MessageWrapper message, 
+  unsigned int session_id
+) {
+  if (currentState == State::UNSECURED 
+   || currentState == State::ESTABLISHING) {
+    handle_message(message);
+  }
+}
+	\end{minted}
+	\caption{Handshake Agent getting notified of new message.}
+	\label{messageHandling}
+\end{code}
 
 
 \subsection{External Libraries}
 \label{extBib}
 
 \subsubsection{CLI11}
+CLI11 implements a basic Comand Line Interface (CLI) where users are able to specify parameters relevant for the program. 
+
+\begin{code}
+	\begin{minted}{cpp}
+CLI::App app{"tls_client"};
+
+std::string host = "localhost";
+std::string port = "4433";
+spdlog::level::level_enum log_level = spdlog::level::info;
+std::map<std::string, spdlog::level::level_enum> log_level_map = {
+  {"trace", spdlog::level::trace},
+  {"debug", spdlog::level::debug},
+  {"info", spdlog::level::info},
+  {"warn", spdlog::level::warn},
+  {"error", spdlog::level::err},
+  {"critical", spdlog::level::critical}
+};
+
+
+app.add_option("-n,--hostname", host, "Hostname");
+app.add_option("-p,--port", port, "Port");
+app.add_option("-l,--log-level", log_level, "Log level")
+  ->transform(CLI::CheckedTransformer(log_level_map, CLI::ignore_case));
+
+CLI11_PARSE(app, argc, argv);
+	\end{minted}
+	\caption{Handshake Agent getting notified of new message.}
+	\label{cli11}
+\end{code}
 
 
 \subsubsection{spdlog}
+To log important information the logging library spdlog is employed.
 
 
 \subsubsection{JSON}
+Any further information, e.g. prime number for Diffie-Hellman IKE, is stored in a .json file which is read as follows. 
+
 
 
 \section{Usage}
@@ -83,7 +242,44 @@
 \newpage
 
 \section{Project Structure}
-
+\dirtree{%
+	.1 /.
+	.2 LICENSE.
+	.2 meson\_options.txt.
+	.2 meson.build.
+	.2 README.md.
+	.2 CHANGELOG.org.
+	.2 modp\_primes.json.
+	.2 include.
+	.3 tls\_client.h.
+	.3 tls\_server.h.
+	.2 src.
+	.3 client.cpp.
+	.3 server.cpp.
+	.3 tls\_client.cpp.
+	.3 tls\_server.cpp.
+	.2 doc.
+	.3 doc.tex.
+	.3 references.bib.
+	.3 doc.pdf.
+	.2 tls\_util.
+	.3 include.
+	.4 BigInt.hpp.
+	.4 picosha2.h.
+	.4 plusaes.hpp.
+	.4 messagebuilder.h.
+	.4 pipe.h.
+	.4 session.h.
+	.4 tls\_handshake\_agent.h.
+	.4 tls\_observer.h.
+	.3 src.
+	.4 Message.proto.
+	.4 pipe.cpp.
+	.4 session.cpp.
+	.4 tls\_handshake\_agent.cpp.
+	.3 meson.build.
+	.2 build.
+}\hfill
 
 % .bib include & references
 \newpage
