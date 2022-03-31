@@ -82,24 +82,14 @@ Network communication between client and server is established by utilizing asio
 
 \begin{code}
 	\begin{minted}{cpp}
-TLS_Client::TLS_Client(
-  asio::io_context& io_context, 
-  std::string host, 
-  std::string port
-  )
-  : io_context(io_context),
-  resolver(io_context),
-  socket(io_context) 
-{	
-  endpoints = resolver.resolve(host, port);
-  asio::connect(socket, endpoints);
-  session = std::make_shared<Session>(std::move(socket), 0);
-  session->start();
-  spdlog::info("Client - Connected to {}:{}", host, port);
-	
-  handshake_agent = std::make_shared<TLS_Handshake_Agent>(session);
-  session->subscribe(handshake_agent);
-}
+asio::io_context io_context;
+asio::ip::tcp::resolver resolver(io_context);
+asio::ip::tcp::socket socket(io_context);
+asio::ip::tcp::resolver::results_type endpoints = 
+  resolver.resolve(host, port);
+
+asio::connect(socket, endpoints);
+
 	\end{minted}
 	\caption{Creation of socket connection on client side.}
 	\label{clientConnection}
@@ -111,30 +101,18 @@ TLS_Client::TLS_Client(
 
 \begin{code}
 	\begin{minted}{cpp}
-void TLS_Server::start_accept() {
-  spdlog::info("Server - Starting accept");
-	
-  acceptor.async_accept(
-  [this](const std::error_code& ec, asio::ip::tcp::socket socket) {
-    if (!ec) {
-      spdlog::info("Server - Accepted connection");
-      auto new_session =  
-        std::make_shared<Session>(std::move(socket), sessions.size());
-      new_session->subscribe(shared_from_this());
-      new_session->start();
-      sessions.push_back(new_session);
-		
-      auto new_handshake_agent = 
-        std::make_shared<TLS_Handshake_Agent>(new_session);
-      new_session->subscribe(new_handshake_agent);
-      handshake_agents.push_back(new_handshake_agent);
-		
-      start_accept();
-    } else {
-      spdlog::error("Server - Error accepting connection: {}", ec.message());
-    }
-  });
-}
+asio::io_context io_context{1};
+asio::ip::tcp::acceptor acceptor{
+  io_context, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), port)
+};
+acceptor.async_accept(
+[this](const std::error_code& ec, asio::ip::tcp::socket socket) {
+  if (!ec) {
+    // handle socket
+  } else {
+    // throw error
+  }
+});
 	\end{minted}
 	\caption{Server asynchronously waiting for client connections.}
 	\label{serverConnection}
@@ -154,12 +132,29 @@ void Pipe::send(google::protobuf::Message& message) {
   std::ostream os(&buffer);
   message.SerializeToOstream(&os);
   asio::write(*socket, buffer);
-	
-  spdlog::debug("Pipe - Sent message");
 }
 	\end{minted}
-	\caption{Server asynchronously waiting for client connections.}
+	\caption{Serialization of protobuf messages.}
 	\label{pipeSend}
+\end{code}
+
+\subsubsection{Message De-serialization}
+\begin{code}
+	\begin{minted}{cpp}
+void Pipe::receive(google::protobuf::Message& message) {
+  u_int64_t message_size;
+  asio::read(*socket, asio::buffer(&message_size, sizeof(message_size)));
+	
+  asio::streambuf buffer;
+  asio::streambuf::mutable_buffers_type bufs = buffer.prepare(message_size);
+  buffer.commit(asio::read(*socket, bufs));
+	
+  std::istream is(&buffer);
+  message.ParseFromIstream(&is);
+}
+	\end{minted}
+	\caption{De-serialization of protobuf messages.}
+	\label{pipeReceive}
 \end{code}
 
 
@@ -172,17 +167,43 @@ Whenever a new message is received the TLS\_Handshake\_Agent class is responsibl
 
 \begin{code}
 	\begin{minted}{cpp}
-void TLS_Handshake_Agent::notify(
-  tls::MessageWrapper message, 
-  unsigned int session_id
-) {
-  if (currentState == State::UNSECURED 
-   || currentState == State::ESTABLISHING) {
-    handle_message(message);
+void TLS_Handshake_Agent::handle_message(tls::MessageWrapper message) {    
+  tls::MessageType messageType = message.type();
+	
+  if (messageType == tls::MessageType::CLIENT_HELLO) {
+    receive_client_hello();
+    
+  } else if (messageType == tls::MessageType::SERVER_HELLO) {
+    receive_server_hello(message);
+		
+  } else if (messageType == tls::MessageType::CERTIFICATE) {
+    receive_certificate(message);
+		
+  } else if (messageType == tls::MessageType::SERVER_HELLO_DONE) {
+    receive_server_hello_done();
+		
+  } else if (messageType == tls::MessageType::CLIENT_KEY_EXCHANGE) {
+    receive_client_key_exchange(message);
+	
+  } else if (messageType == tls::MessageType::CHANGE_CIPHER_SPEC) {
+    partnerEncrypted = true;
+		
+  } else if (messageType == tls::MessageType::FINISHED) {
+    if (!partnerEncrypted) {
+      session->send(Messagebuilder::build_abort_message());
+      throw std::runtime_error("Partner did not send ChangeCipherSpec");
+    }
+    receive_finished(message);
+		
+  } else if (messageType == tls::MessageType::ABORT) {
+    currentState = State::UNSECURED;
+    throw new std::runtime_error("TLS connection aborted");
+  } else {
+    spdlog::error("Unknown message type: {}", messageType);
   }
 }
 	\end{minted}
-	\caption{Handshake Agent getting notified of new message.}
+	\caption{TLS Handshake Agent handling a message.}
 	\label{messageHandling}
 \end{code}
 
@@ -191,52 +212,105 @@ void TLS_Handshake_Agent::notify(
 \label{extBib}
 
 \subsubsection{CLI11}
-CLI11 implements a basic Comand Line Interface (CLI) where users are able to specify parameters relevant for the program. 
-
-\begin{code}
-	\begin{minted}{cpp}
-CLI::App app{"tls_client"};
-
-std::string host = "localhost";
-std::string port = "4433";
-spdlog::level::level_enum log_level = spdlog::level::info;
-std::map<std::string, spdlog::level::level_enum> log_level_map = {
-  {"trace", spdlog::level::trace},
-  {"debug", spdlog::level::debug},
-  {"info", spdlog::level::info},
-  {"warn", spdlog::level::warn},
-  {"error", spdlog::level::err},
-  {"critical", spdlog::level::critical}
-};
-
-
-app.add_option("-n,--hostname", host, "Hostname");
-app.add_option("-p,--port", port, "Port");
-app.add_option("-l,--log-level", log_level, "Log level")
-  ->transform(CLI::CheckedTransformer(log_level_map, CLI::ignore_case));
-
-CLI11_PARSE(app, argc, argv);
-	\end{minted}
-	\caption{Handshake Agent getting notified of new message.}
-	\label{cli11}
-\end{code}
+CLI11 implements a basic Command Line Interface (CLI) where users are able to specify parameters relevant for the program. 
 
 
 \subsubsection{spdlog}
 To log important information the logging library spdlog is employed.
 
+\begin{code}
+	\begin{minted}{cpp}
+spdlog::trace("Trace bugs during development");
+spdlog::debug("Debug messages");
+spdlog::info("User-facing messages");
+spdlog::warn("Potential errors");
+spdlog::error("Errors");
+spdlog::critical("Critical errors");
+	\end{minted}
+	\caption{Usage of different log types.}
+	\label{spdlog}
+\end{code}
+
+
 
 \subsubsection{JSON}
-Any further information, e.g. prime number for Diffie-Hellman IKE, is stored in a .json file which is read as follows. 
+Any further information, e.g. prime number for Diffie-Hellman IKE, is stored in a .json file which is read as follows. This is done using nlohman/json
+
+\begin{code}
+	\begin{minted}{cpp}
+void TLS_Handshake_Agent::read_primes_json(
+  std::string filename, 
+  int id, 
+  BigInt& g, 
+  BigInt& p
+) {
+  std::ifstream file(filename);
+  if (!file.is_open()) {
+    throw new std::runtime_error("Error opening file");
+  }
+  nlohmann::json primes;
+  file >> primes;
+  file.close();
+  g = int(primes["groups"][id]["g"]); 
+  p = std::string(primes["groups"][id]["p_dec"]);
+}
+	\end{minted}
+	\caption{nlohman reading the generator $g$ and prime number $p$.}
+	\label{json}
+\end{code}
 
 
+\subsubsection{plusaes}
+The header-only library plusaes is used to encrypt/decrypt messages.
+
+\begin{code}
+	\begin{minted}{cpp}
+std::vector<unsigned char> key(32);
+	
+size = plusaes::get_padded_encrypted_size(message.size());
+std::vector<unsigned char> encrypted(size);
+	
+plusaes::encrypt_cbc(
+  (unsigned char*)message.data(), message.size(), 
+  &key[0], key.size(), 
+  &iv, 
+  &encrypted[0], encrypted.size(), 
+  true
+);
+
+	\end{minted}
+	\caption{Plusaes encrypting a message}
+	\label{plusaes}
+\end{code}
+
+\subsubsection{picoSHA2}
+Hashing is done using the header-only library picoSHA2.
+
+\begin{code}
+	\begin{minted}{cpp}
+std::vector<unsigned char> key(32);
+picosha2::hash256(key_string.begin(), key_string.end(), key);
+	\end{minted}
+	\caption{Plusaes encrypting a message}
+	\label{picosha2}
+\end{code}
 
 \section{Usage}
 \label{usage}
 
 \subsection{Command Line Arguments}
 
-\subsubsection{Configuration}
+\paragraph{-n, --hostname}
+Hostname of the server (default: localhost)
+
+\paragraph{-i, --ip}
+IPv4 address of the server (to be preferred over hostname)
+
+\paragraph{-p, --port}
+The port of the server (default: 4433)
+
+\paragraph{-l, --log-level}
+Log-Level of the application (default: info)
 
 
 \newpage
