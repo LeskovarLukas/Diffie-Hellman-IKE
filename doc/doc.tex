@@ -34,10 +34,10 @@
 The goal of this project was to simulate communication over Transport Layer Security (TLS) by implementing the Diffie-Hellman Internet Key Exchange (IKE). Any further communication was to be encrypted by a symmetric encryption algorithm.
 
 \section{Transport Layer Security}
-The nowadays de-facto standard for securely communicating over the internet is Transport Layer Security. It establishes a secure channel between two parties that ensures authenticity, confidentiality and integrity of data.
+The nowadays de-facto standard for securely communicating over the internet is Transport Layer Security (TLS). It establishes a secure channel between two parties that ensures authenticity, confidentiality and integrity of data.
 Its predecessor, Secure Socket Layer (SSL) was replaced by TLS 1.0 in 1999. 
 TLS 1.1, released in 2006, did not propose many security upgrades compared to version 1.0. However, in 2008 TLS 1.2 solved many issues encountered with previous versions and made many improvements on its security.
-In 2018 the newest version 1.3 was implemented to reduce overhead and improve security once more.
+In 2018 the newest version 1.3 was implemented to reduce overhead and improve security once more. \cite{cloudflareTLS}
 
 \subsection{Key Generation}
 To create secure keys for symmetric encryption TLS implements the Diffie-Hellman Key Agreement Method. This requires both parties to generate a public $P$ and private/secret $S$ key based on agreed upon parameters $g$, $p$ and $q$, as seen in Equation \ref{keyDerivation}. The parameters $p$ and $q$ are very large prime numbers linked to the relatively small generator number $g$ so that $g^{q}\ \mathrm{mod}\ p = 1$. The private key for each participant is random for each key exchange. \cite{dierks1999rfc2246}
@@ -46,10 +46,10 @@ To create secure keys for symmetric encryption TLS implements the Diffie-Hellman
 	P = g^{ \ S}\ \mathrm{mod}\ p
 \end{equation}
 
- After exchanging the public keys both partners are able to derive the key-encryption key (KEK), see Equation \ref{sharedSecret}. The KEK is then used to encrypt the content-encryption key (CEK) utilized for encrypting application data.
+ After exchanging the public keys both parties are able to derive the premaster secret $K$ using its partners public key $P$, see Equation \ref{sharedSecret}. The premaster secret is then used to derive the key used for encrypting/decrypting any application data following the key exchange.
 
 \begin{equation}\label{sharedSecret}
-	KEK = partnerPublic^{\ S}\ \mathrm{mod}\ p
+	K = P^{\ S}\ \mathrm{mod}\ p
 \end{equation}
  
 
@@ -64,6 +64,40 @@ To negotiate the aforementioned shared secret the two parties perform a handshak
 	\caption{UML Sequence Diagram depicting a TLS 1.0 handshake. Dashed blue boxes represent optional, situation dependent messages while solid green boxes correspond to encrypted messages. \cite{dierks1999rfc2246}}
 	\label{fig:handshake}
 \end{figure}
+
+\subsection*{Client Hello}
+The ClientHello message is sent whenever a client wants to initiate a handshake or is requested to renew the TLS session.
+
+\subsection*{Server Hello}
+The Server responds with a ServerHello when it found a algorithm meeting the clients offerings.
+
+
+\subsection*{Server Certificate}
+Contains the signed certificate to authenticate the servers identity whenever the negotiated agreement method is not anonymous.
+
+\subsection*{Server Key Exchange}
+Will be sent whenever the Server Certificate does not contain enough information for the client to derive a premaster secret.
+
+\subsection*{Certificate Request}
+The server may request the client to authenticate itself too.
+
+\subsection*{Server Hello Done}
+The server is finished with the server hello and will wait for a clients response.
+
+\subsection*{Client Certificate}
+The clients sends its certificate if it is requested to by the server. 
+
+\subsection*{Client Key Exchange}
+The client has set the premaster secret and now informs the server of its public key.
+
+\subsection*{Certificate Verify}
+If the client is asked to it will send its certificate.
+
+\subsection*{Change Cipher Spec}
+A ChangeCipherSpec message will be sent by both client and server to notify each other that all following messages will be sent using negotiated compression and encryption algorithms. 
+
+\subsection*{Finished}
+Both parties inform each other that the key exchange is finished. It contains a hash all previous messages to verify the key negotiation has been correct.
 
 \section{Software Architecture}
 
@@ -139,6 +173,7 @@ To notify any main classes of new messages the observer pattern is implemented. 
 	\label{fig:ClassInteraction}
 \end{figure}
 
+\newpage
 
 \section{Description of code-blocks}
 
@@ -163,7 +198,6 @@ asio::connect(socket, endpoints);
 	\label{clientConnection}
 \end{code}
 
-\pagebreak
 
 \subsubsection{Server Connection}
 
@@ -188,6 +222,7 @@ acceptor.async_accept(
 
 \subsection{Protobuf}
 Any data to be sent over TCP is serialized using Google Protobuf \cite{protobuf}.
+\newline
 
 \subsubsection{Message Serialization}
 \begin{code}
@@ -225,8 +260,7 @@ void Pipe::receive(google::protobuf::Message& message) {
 	\label{pipeReceive}
 \end{code}
 
-
-%Pipe Klasse 
+\pagebreak
 
 \subsection{TLS Handshake}
 Whenever a new message is received the TLS\_Handshake\_Agent class is responsible for handling and responding to any handshake related message.
@@ -236,38 +270,31 @@ Whenever a new message is received the TLS\_Handshake\_Agent class is responsibl
 \begin{code}
 	\begin{minted}{cpp}
 void TLS_Handshake_Agent::handle_message(tls::MessageWrapper message) {    
-  tls::MessageType messageType = message.type();
-	
-  if (messageType == tls::MessageType::CLIENT_HELLO) {
+  tls::Message_Type message_type = message.type();
+
+  if (messageType == tls::Message_Type::CLIENT_HELLO) {
     receive_client_hello();
-    
-  } else if (messageType == tls::MessageType::SERVER_HELLO) {
+  } else if (message_type == tls::Message_Type::SERVER_HELLO) {
     receive_server_hello(message);
-		
-  } else if (messageType == tls::MessageType::CERTIFICATE) {
+  } else if (message_type == tls::Message_Type::CERTIFICATE) {
     receive_certificate(message);
-		
-  } else if (messageType == tls::MessageType::SERVER_HELLO_DONE) {
+  } else if (message_type == tls::Message_Type::SERVER_HELLO_DONE) {
     receive_server_hello_done();
-		
-  } else if (messageType == tls::MessageType::CLIENT_KEY_EXCHANGE) {
+  } else if (message_type == tls::Message_Type::CLIENT_KEY_EXCHANGE) {
     receive_client_key_exchange(message);
-	
-  } else if (messageType == tls::MessageType::CHANGE_CIPHER_SPEC) {
+  } else if (message_type == tls::Message_Type::CHANGE_CIPHER_SPEC) {
     partnerEncrypted = true;
-		
-  } else if (messageType == tls::MessageType::FINISHED) {
+  } else if (message_type == tls::Message_Type::FINISHED) {
     if (!partnerEncrypted) {
       session->send(Messagebuilder::build_abort_message());
       throw std::runtime_error("Partner did not send ChangeCipherSpec");
     }
     receive_finished(message);
-		
-  } else if (messageType == tls::MessageType::ABORT) {
+  } else if (message_type == tls::Message_Type::ABORT) {
     currentState = State::UNSECURED;
     throw new std::runtime_error("TLS connection aborted");
   } else {
-    spdlog::error("Unknown message type: {}", messageType);
+    spdlog::error("Unknown message type: {}", message_type);
   }
 }
 	\end{minted}
@@ -275,6 +302,7 @@ void TLS_Handshake_Agent::handle_message(tls::MessageWrapper message) {
 	\label{messageHandling}
 \end{code}
 
+\pagebreak
 
 \subsection{External Libraries}
 \label{extBib}
@@ -300,17 +328,13 @@ spdlog::critical("Critical errors");
 \end{code}
 
 
-
 \subsubsection{JSON}
 Any further information, e.g. prime number for Diffie-Hellman IKE, is stored in a .json file which is read as follows. This is done using nlohman/json \cite{json_ref}.
 
 \begin{code}
 	\begin{minted}{cpp}
 void TLS_Handshake_Agent::read_primes_json(
-  std::string filename, 
-  int id, 
-  BigInt& g, 
-  BigInt& p
+  std::string filename, int id, BigInt& g, BigInt& p
 ) {
   std::ifstream file(filename);
   if (!file.is_open()) {
@@ -366,6 +390,7 @@ picosha2::hash256(key_string.begin(), key_string.end(), key);
 \subsubsection{BigInt}
 The Diffie-Hellman IKE uses large integer values which are not supported in standard C++17. Therefore the header-only library BigInt \cite{bigint} was included.
 
+\pagebreak
 
 \section{Usage}
 \label{usage}
@@ -428,7 +453,7 @@ Log-Level of the application (default: info)
 }\hfill
 
 % .bib include & references
-\newpage
+%\newpage
 \bibliography{references}
 \bibliographystyle{plain}
 \end{document}
