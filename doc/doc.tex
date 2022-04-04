@@ -34,10 +34,24 @@
 The goal of this project was to simulate communication over Transport Layer Security (TLS) by implementing the Diffie-Hellman Internet Key Exchange (IKE). Any further communication was to be encrypted by a symmetric encryption algorithm.
 
 \section{Transport Layer Security}
-The nowadays de-facto standard for communicating over the internet is Transport Layer Security. Its predecessor SSL was replaced by TLS 1.0 in 1999. In 2018 the newest version 1.3 was implemented which drastically reduced the overhead during handshakes.
+The nowadays de-facto standard for securely communicating over the internet is Transport Layer Security. It establishes a secure channel between two parties that ensures authenticity, confidentiality and integrity of data.
+Its predecessor, Secure Socket Layer (SSL) was replaced by TLS 1.0 in 1999. In 2018 the newest version 1.3 was implemented to reduce the overhead produced by the handshake.
 
 \subsubsection{Key Generation}
+To create secure keys for symmetric encryption TLS implements the Diffie-Hellman Key Agreement Method. This requires both parties to generate a public $P$ and private/secret $S$ key based on agreed upon parameters $g$, $p$ and $q$, as seen in Equation \ref{keyDerivation}. The parameters $p$ and $q$ are very large prime numbers linked to the relatively small generator number $g$ so that $g^{q}\ \mathrm{mod}\ p = 1$. The private key for each participant is random for each key exchange.
 
+\begin{equation}\label{keyDerivation}
+	P = g^{ \ S}\ \mathrm{mod}\ p
+\end{equation}
+
+ After exchanging the public keys both partners are able to derive the key-encryption key (KEK), see Equation \ref{sharedSecret}. The KEK is then used to encrypt the content-encryption key (CEK) utilized for encrypting application data.
+
+\begin{equation}\label{sharedSecret}
+	KEK = partnerPublic^{\ S}\ \mathrm{mod}\ p
+\end{equation}
+ 
+
+Nowadays this method of negotiating keys is outdated and Elliptic Curve Diffie-Hellman key calculations are used instead \cite{jablon2001ieee}.
 
 \subsubsection{Handshake}
 
@@ -121,7 +135,7 @@ To notify any main classes of new messages the observer pattern is implemented. 
 
 
 \subsection{Asio}
-Network communication between client and server is established by utilizing asio.
+Network communication between client and server is established by utilizing asio \cite{asio}.
 
 \subsubsection{Client Connection}
 
@@ -352,8 +366,8 @@ The Diffie-Hellman IKE uses large integer values which are not supported in stan
 \paragraph{-n, --hostname}
 Hostname of the server (default: localhost)
 
-\paragraph{-i, --ip}
-IPv4 address of the server (to be preferred over hostname)
+%\paragraph{-i, --ip}
+%IPv4 address of the server (to be preferred over hostname)
 
 \paragraph{-p, --port}
 The port of the server (default: 4433)
