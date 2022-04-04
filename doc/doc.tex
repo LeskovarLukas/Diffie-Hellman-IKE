@@ -35,10 +35,12 @@ The goal of this project was to simulate communication over Transport Layer Secu
 
 \section{Transport Layer Security}
 The nowadays de-facto standard for securely communicating over the internet is Transport Layer Security. It establishes a secure channel between two parties that ensures authenticity, confidentiality and integrity of data.
-Its predecessor, Secure Socket Layer (SSL) was replaced by TLS 1.0 in 1999. In 2018 the newest version 1.3 was implemented to reduce the overhead produced by the handshake.
+Its predecessor, Secure Socket Layer (SSL) was replaced by TLS 1.0 in 1999. 
+TLS 1.1, released in 2006, did not propose many security upgrades compared to version 1.0. However, in 2008 TLS 1.2 solved many issues encountered with previous versions and made many improvements on its security.
+In 2018 the newest version 1.3 was implemented to reduce overhead and improve security once more.
 
-\subsubsection{Key Generation}
-To create secure keys for symmetric encryption TLS implements the Diffie-Hellman Key Agreement Method. This requires both parties to generate a public $P$ and private/secret $S$ key based on agreed upon parameters $g$, $p$ and $q$, as seen in Equation \ref{keyDerivation}. The parameters $p$ and $q$ are very large prime numbers linked to the relatively small generator number $g$ so that $g^{q}\ \mathrm{mod}\ p = 1$. The private key for each participant is random for each key exchange.
+\subsection{Key Generation}
+To create secure keys for symmetric encryption TLS implements the Diffie-Hellman Key Agreement Method. This requires both parties to generate a public $P$ and private/secret $S$ key based on agreed upon parameters $g$, $p$ and $q$, as seen in Equation \ref{keyDerivation}. The parameters $p$ and $q$ are very large prime numbers linked to the relatively small generator number $g$ so that $g^{q}\ \mathrm{mod}\ p = 1$. The private key for each participant is random for each key exchange. \cite{dierks1999rfc2246}
 
 \begin{equation}\label{keyDerivation}
 	P = g^{ \ S}\ \mathrm{mod}\ p
@@ -53,8 +55,15 @@ To create secure keys for symmetric encryption TLS implements the Diffie-Hellman
 
 Nowadays this method of negotiating keys is outdated and Elliptic Curve Diffie-Hellman key calculations are used instead \cite{jablon2001ieee}.
 
-\subsubsection{Handshake}
+\subsection{Handshake}
+To negotiate the aforementioned shared secret the two parties perform a handshake. The handshake implemented in this project resembles the basic TLS 1.0 full handshake, see Figure \ref{fig:handshake}.
 
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=.6\textwidth]{Handshake}
+	\caption{UML Sequence Diagram depicting a TLS 1.0 handshake. Dashed blue boxes represent optional, situation dependent messages while solid green boxes correspond to encrypted messages. \cite{dierks1999rfc2246}}
+	\label{fig:handshake}
+\end{figure}
 
 \section{Software Architecture}
 
@@ -86,7 +95,7 @@ The following classes are utilized by any other part of the application trying t
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=.6\textwidth]{UML/CommunicationClasses}
-	\caption{UML Diagram on the Session and Pipe classes used for communication.}
+	\caption{UML Class Diagram of the Session and Pipe classes used for communication.}
 	\label{fig:CommunicationClasses}
 \end{figure}
 
@@ -126,7 +135,7 @@ To notify any main classes of new messages the observer pattern is implemented. 
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=.7\textwidth]{UML/ClassInteraction}
-	\caption{This UML diagram shows how the different classes of the application are associated to each other.}
+	\caption{This UML Class Diagram shows how the different classes of the application are associated to each other.}
 	\label{fig:ClassInteraction}
 \end{figure}
 
