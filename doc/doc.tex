@@ -33,17 +33,71 @@
 \section{Introduction}
 The goal of this project was to simulate communication over Transport Layer Security (TLS) by implementing the Diffie-Hellman Internet Key Exchange (IKE). Any further communication was to be encrypted by a symmetric encryption algorithm.
 
-\section{Implementation}
+\section{Transport Layer Security}
+The nowadays de-facto standard for securely communicating over the internet is Transport Layer Security (TLS). It establishes a secure channel between two parties that ensures authenticity, confidentiality and integrity of data.
+Its predecessor, Secure Socket Layer (SSL) was replaced by TLS 1.0 in 1999. 
+TLS 1.1, released in 2006, did not propose many security upgrades compared to version 1.0. However, in 2008 TLS 1.2 solved many issues encountered with previous versions and made many improvements on its security.
+In 2018 the newest version 1.3 was implemented to reduce overhead and improve security once more. \cite{cloudflareTLS}
+
+\subsection{Key Generation}
+To create secure keys for symmetric encryption TLS implements the Diffie-Hellman Key Agreement Method. This requires both parties to generate a public $P$ and private/secret $S$ key based on agreed upon parameters $g$, $p$ and $q$, as seen in Equation \ref{keyDerivation}. The parameters $p$ and $q$ are very large prime numbers linked to the relatively small generator number $g$ so that $g^{q}\ \mathrm{mod}\ p = 1$. The private key for each participant is random for each key exchange. \cite{dierks1999rfc2246}
+
+\begin{equation}\label{keyDerivation}
+	P = g^{ \ S}\ \mathrm{mod}\ p
+\end{equation}
+
+ After exchanging the public keys both parties are able to derive the premaster secret $K$ using its partners public key $P$, see Equation \ref{sharedSecret}. The premaster secret is then used to derive the key used for encrypting/decrypting any application data following the key exchange.
+
+\begin{equation}\label{sharedSecret}
+	K = P^{\ S}\ \mathrm{mod}\ p
+\end{equation}
+ 
+
+Nowadays this method of negotiating keys is outdated and Elliptic Curve Diffie-Hellman key calculations are used instead \cite{jablon2001ieee}.
+
+\subsection{Handshake}
+To negotiate the aforementioned shared secret the two parties perform a handshake. The handshake implemented in this project resembles the basic TLS 1.0 full handshake, see Figure \ref{fig:handshake}.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=.6\textwidth]{Handshake}
+	\caption{UML Sequence Diagram depicting a TLS 1.0 handshake. Dashed blue boxes represent optional, situation dependent messages while solid green boxes correspond to encrypted messages. \cite{dierks1999rfc2246}}
+	\label{fig:handshake}
+\end{figure}
+
+\subsection*{Client Hello}
+The ClientHello message is sent whenever a client wants to initiate a handshake or is requested to renew the TLS session.
+
+\subsection*{Server Hello}
+The Server responds with a ServerHello when it found a algorithm meeting the clients offerings.
 
 
-\subsection{TLS 1.0}
+\subsection*{Server Certificate}
+Contains the signed certificate to authenticate the servers identity whenever the negotiated agreement method is not anonymous.
 
+\subsection*{Server Key Exchange}
+Will be sent whenever the Server Certificate does not contain enough information for the client to derive a premaster secret.
 
-\subsubsection{Key Generation}
+\subsection*{Certificate Request}
+The server may request the client to authenticate itself too.
 
+\subsection*{Server Hello Done}
+The server is finished with the server hello and will wait for a clients response.
 
-\subsubsection{Handshake}
+\subsection*{Client Certificate}
+The clients sends its certificate if it is requested to by the server. 
 
+\subsection*{Client Key Exchange}
+The client has set the premaster secret and now informs the server of its public key.
+
+\subsection*{Certificate Verify}
+If the client is asked to it will send its certificate.
+
+\subsection*{Change Cipher Spec}
+A ChangeCipherSpec message will be sent by both client and server to notify each other that all following messages will be sent using negotiated compression and encryption algorithms. 
+
+\subsection*{Finished}
+Both parties inform each other that the key exchange is finished. It contains a hash all previous messages to verify the key negotiation has been correct.
 
 \section{Software Architecture}
 
@@ -69,79 +123,106 @@ The goal of this project was to simulate communication over Transport Layer Secu
 
 \subsection{Classes}
 
-\subsection{Communication}
+\subsubsection{Communication}
+The following classes are utilized by any other part of the application trying to send or receive messages over TCP.
 
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=.6\textwidth]{UML/CommunicationClasses}
+	\caption{UML Class Diagram of the Session and Pipe classes used for communication.}
+	\label{fig:CommunicationClasses}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=.7\textwidth]{UML/Messagebuilder}
+	\caption{The MessageBuilder is a utility class consisting of multiple static methods building Protobuf Messages.}
+	\label{fig:Messagebuilder}
+\end{figure}
+
+\subsubsection{Main Logic}
+To notify any main classes of new messages the observer pattern is implemented. The following classes each implement the TLS\_Observer and get notified by their respective session object once any messages are receives.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=.7\textwidth]{UML/Observer}
+	\caption{The TLS\_Observer class implemented by any receiving class.}
+	\label{fig:Observer}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=.7\textwidth]{UML/ClientServer}
+	\caption{The TLS\_Client and TLS\_Server classes containing main logic for the application.}
+	\label{fig:ClientServer}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=.7\textwidth]{UML/HandshakeAgent}
+	\caption{The TLS\_Handshake\_Agent handles any key exchange messages. It also contains  utility methods for encrypting/decrypting messages.}
+	\label{fig:HandshakeAgent}
+\end{figure}
+
+\subsection{Class Association}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=.7\textwidth]{UML/ClassInteraction}
+	\caption{This UML Class Diagram shows how the different classes of the application are associated to each other.}
+	\label{fig:ClassInteraction}
+\end{figure}
+
+\newpage
 
 \section{Description of code-blocks}
 
 
 \subsection{Asio}
-Network communication between client and server is established by utilizing asio.
+Network communication between client and server is established by utilizing asio \cite{asio}.
 
 \subsubsection{Client Connection}
 
 \begin{code}
 	\begin{minted}{cpp}
-TLS_Client::TLS_Client(
-  asio::io_context& io_context, 
-  std::string host, 
-  std::string port
-  )
-  : io_context(io_context),
-  resolver(io_context),
-  socket(io_context) 
-{	
-  endpoints = resolver.resolve(host, port);
-  asio::connect(socket, endpoints);
-  session = std::make_shared<Session>(std::move(socket), 0);
-  session->start();
-  spdlog::info("Client - Connected to {}:{}", host, port);
-	
-  handshake_agent = std::make_shared<TLS_Handshake_Agent>(session);
-  session->subscribe(handshake_agent);
-}
+asio::io_context io_context;
+asio::ip::tcp::resolver resolver(io_context);
+asio::ip::tcp::socket socket(io_context);
+asio::ip::tcp::resolver::results_type endpoints = 
+  resolver.resolve(host, port);
+
+asio::connect(socket, endpoints);
+
 	\end{minted}
 	\caption{Creation of socket connection on client side.}
 	\label{clientConnection}
 \end{code}
 
-\pagebreak
 
 \subsubsection{Server Connection}
 
 \begin{code}
 	\begin{minted}{cpp}
-void TLS_Server::start_accept() {
-  spdlog::info("Server - Starting accept");
-	
-  acceptor.async_accept(
-  [this](const std::error_code& ec, asio::ip::tcp::socket socket) {
-    if (!ec) {
-      spdlog::info("Server - Accepted connection");
-      auto new_session =  
-        std::make_shared<Session>(std::move(socket), sessions.size());
-      new_session->subscribe(shared_from_this());
-      new_session->start();
-      sessions.push_back(new_session);
-		
-      auto new_handshake_agent = 
-        std::make_shared<TLS_Handshake_Agent>(new_session);
-      new_session->subscribe(new_handshake_agent);
-      handshake_agents.push_back(new_handshake_agent);
-		
-      start_accept();
-    } else {
-      spdlog::error("Server - Error accepting connection: {}", ec.message());
-    }
-  });
-}
+asio::io_context io_context{1};
+asio::ip::tcp::acceptor acceptor{
+  io_context, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), port)
+};
+acceptor.async_accept(
+[this](const std::error_code& ec, asio::ip::tcp::socket socket) {
+  if (!ec) {
+    // handle socket
+  } else {
+    // throw error
+  }
+});
 	\end{minted}
 	\caption{Server asynchronously waiting for client connections.}
 	\label{serverConnection}
 \end{code}
 
 \subsection{Protobuf}
-Any data to be sent over TCP is serialized using Google Protobuf.
+Any data to be sent over TCP is serialized using Google Protobuf \cite{protobuf}.
+\newline
 
 \subsubsection{Message Serialization}
 \begin{code}
@@ -154,16 +235,32 @@ void Pipe::send(google::protobuf::Message& message) {
   std::ostream os(&buffer);
   message.SerializeToOstream(&os);
   asio::write(*socket, buffer);
-	
-  spdlog::debug("Pipe - Sent message");
 }
 	\end{minted}
-	\caption{Server asynchronously waiting for client connections.}
+	\caption{Serialization of protobuf messages.}
 	\label{pipeSend}
 \end{code}
 
+\subsubsection{Message De-serialization}
+\begin{code}
+	\begin{minted}{cpp}
+void Pipe::receive(google::protobuf::Message& message) {
+  u_int64_t message_size;
+  asio::read(*socket, asio::buffer(&message_size, sizeof(message_size)));
+	
+  asio::streambuf buffer;
+  asio::streambuf::mutable_buffers_type bufs = buffer.prepare(message_size);
+  buffer.commit(asio::read(*socket, bufs));
+	
+  std::istream is(&buffer);
+  message.ParseFromIstream(&is);
+}
+	\end{minted}
+	\caption{De-serialization of protobuf messages.}
+	\label{pipeReceive}
+\end{code}
 
-%Pipe Klasse 
+\pagebreak
 
 \subsection{TLS Handshake}
 Whenever a new message is received the TLS\_Handshake\_Agent class is responsible for handling and responding to any handshake related message.
@@ -172,71 +269,145 @@ Whenever a new message is received the TLS\_Handshake\_Agent class is responsibl
 
 \begin{code}
 	\begin{minted}{cpp}
-void TLS_Handshake_Agent::notify(
-  tls::MessageWrapper message, 
-  unsigned int session_id
-) {
-  if (currentState == State::UNSECURED 
-   || currentState == State::ESTABLISHING) {
-    handle_message(message);
+void TLS_Handshake_Agent::handle_message(tls::MessageWrapper message) {    
+  tls::Message_Type message_type = message.type();
+
+  if (messageType == tls::Message_Type::CLIENT_HELLO) {
+    receive_client_hello();
+  } else if (message_type == tls::Message_Type::SERVER_HELLO) {
+    receive_server_hello(message);
+  } else if (message_type == tls::Message_Type::CERTIFICATE) {
+    receive_certificate(message);
+  } else if (message_type == tls::Message_Type::SERVER_HELLO_DONE) {
+    receive_server_hello_done();
+  } else if (message_type == tls::Message_Type::CLIENT_KEY_EXCHANGE) {
+    receive_client_key_exchange(message);
+  } else if (message_type == tls::Message_Type::CHANGE_CIPHER_SPEC) {
+    partnerEncrypted = true;
+  } else if (message_type == tls::Message_Type::FINISHED) {
+    if (!partnerEncrypted) {
+      session->send(Messagebuilder::build_abort_message());
+      throw std::runtime_error("Partner did not send ChangeCipherSpec");
+    }
+    receive_finished(message);
+  } else if (message_type == tls::Message_Type::ABORT) {
+    currentState = State::UNSECURED;
+    throw new std::runtime_error("TLS connection aborted");
+  } else {
+    spdlog::error("Unknown message type: {}", message_type);
   }
 }
 	\end{minted}
-	\caption{Handshake Agent getting notified of new message.}
+	\caption{TLS Handshake Agent handling a message.}
 	\label{messageHandling}
 \end{code}
 
+\pagebreak
 
 \subsection{External Libraries}
 \label{extBib}
 
 \subsubsection{CLI11}
-CLI11 implements a basic Comand Line Interface (CLI) where users are able to specify parameters relevant for the program. 
-
-\begin{code}
-	\begin{minted}{cpp}
-CLI::App app{"tls_client"};
-
-std::string host = "localhost";
-std::string port = "4433";
-spdlog::level::level_enum log_level = spdlog::level::info;
-std::map<std::string, spdlog::level::level_enum> log_level_map = {
-  {"trace", spdlog::level::trace},
-  {"debug", spdlog::level::debug},
-  {"info", spdlog::level::info},
-  {"warn", spdlog::level::warn},
-  {"error", spdlog::level::err},
-  {"critical", spdlog::level::critical}
-};
-
-
-app.add_option("-n,--hostname", host, "Hostname");
-app.add_option("-p,--port", port, "Port");
-app.add_option("-l,--log-level", log_level, "Log level")
-  ->transform(CLI::CheckedTransformer(log_level_map, CLI::ignore_case));
-
-CLI11_PARSE(app, argc, argv);
-	\end{minted}
-	\caption{Handshake Agent getting notified of new message.}
-	\label{cli11}
-\end{code}
+CLI11 \cite{cli11_ref} implements a basic Command Line Interface (CLI) where users are able to specify parameters relevant for the program. 
 
 
 \subsubsection{spdlog}
-To log important information the logging library spdlog is employed.
+To log important information the logging library spdlog \cite{spdlog_ref} is employed.
+
+\begin{code}
+	\begin{minted}{cpp}
+spdlog::trace("Trace bugs during development");
+spdlog::debug("Debug messages");
+spdlog::info("User-facing messages");
+spdlog::warn("Potential errors");
+spdlog::error("Errors");
+spdlog::critical("Critical errors");
+	\end{minted}
+	\caption{Usage of different log types.}
+	\label{spdlog}
+\end{code}
 
 
 \subsubsection{JSON}
-Any further information, e.g. prime number for Diffie-Hellman IKE, is stored in a .json file which is read as follows. 
+Any further information, e.g. prime number for Diffie-Hellman IKE, is stored in a .json file which is read as follows. This is done using nlohman/json \cite{json_ref}.
+
+\begin{code}
+	\begin{minted}{cpp}
+void TLS_Handshake_Agent::read_primes_json(
+  std::string filename, int id, BigInt& g, BigInt& p
+) {
+  std::ifstream file(filename);
+  if (!file.is_open()) {
+    throw new std::runtime_error("Error opening file");
+  }
+  nlohmann::json primes;
+  file >> primes;
+  file.close();
+  g = int(primes["groups"][id]["g"]); 
+  p = std::string(primes["groups"][id]["p_dec"]);
+}
+	\end{minted}
+	\caption{nlohman reading the generator $g$ and prime number $p$.}
+	\label{json}
+\end{code}
 
 
+\subsubsection{plusaes}
+The header-only library plusaes \cite{plusaes} is used to symmetrically encrypt/decrypt messages.
+
+\begin{code}
+	\begin{minted}{cpp}
+std::vector<unsigned char> key(32);
+	
+size = plusaes::get_padded_encrypted_size(message.size());
+std::vector<unsigned char> encrypted(size);
+	
+plusaes::encrypt_cbc(
+  (unsigned char*)message.data(), message.size(), 
+  &key[0], key.size(), 
+  &iv, 
+  &encrypted[0], encrypted.size(), 
+  true
+);
+
+	\end{minted}
+	\caption{Plusaes encrypting a message}
+	\label{plusaes}
+\end{code}
+
+\subsubsection{picoSHA2}
+Hashing is done using the header-only library picoSHA2 \cite{picosha}.
+
+\begin{code}
+	\begin{minted}{cpp}
+std::vector<unsigned char> key(32);
+picosha2::hash256(key_string.begin(), key_string.end(), key);
+	\end{minted}
+	\caption{Plusaes encrypting a message}
+	\label{picosha2}
+\end{code}
+
+\subsubsection{BigInt}
+The Diffie-Hellman IKE uses large integer values which are not supported in standard C++17. Therefore the header-only library BigInt \cite{bigint} was included.
+
+\pagebreak
 
 \section{Usage}
 \label{usage}
 
 \subsection{Command Line Arguments}
 
-\subsubsection{Configuration}
+\paragraph{-n, --hostname}
+Hostname of the server (default: localhost)
+
+%\paragraph{-i, --ip}
+%IPv4 address of the server (to be preferred over hostname)
+
+\paragraph{-p, --port}
+The port of the server (default: 4433)
+
+\paragraph{-l, --log-level}
+Log-Level of the application (default: info)
 
 
 \newpage
@@ -282,7 +453,7 @@ Any further information, e.g. prime number for Diffie-Hellman IKE, is stored in 
 }\hfill
 
 % .bib include & references
-\newpage
+%\newpage
 \bibliography{references}
 \bibliographystyle{plain}
 \end{document}
