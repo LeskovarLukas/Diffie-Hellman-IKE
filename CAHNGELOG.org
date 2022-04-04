@@ -1,5 +1,8 @@
 * Changelog
-** [0.3.0] - Unreleased
+** [1.0.1] - 2022-04-03
+*** Added
+- documentation
+** [1.0.0] - 2022-03-31
 *** Changed
 - pipe, session, tls_handshake_agent modularized and in static lib
 - tls_client and tls_server modularized
