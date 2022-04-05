@@ -15,7 +15,7 @@
 
 
 bool TLS_Handshake_Agent::check_protocols() {
-    if (localProtocol != partnerProtocol) {
+    if (local_Protocol != partner_Protocol) {
         spdlog::error("TLS_Handshake_Agent - Protocols do not match");
         session->send(Messagebuilder::build_abort_message());
         return false;
@@ -26,41 +26,41 @@ bool TLS_Handshake_Agent::check_protocols() {
 
 // Handshake handles
 
-void TLS_Handshake_Agent::handle_message(tls::MessageWrapper message) {    
-    tls::MessageType messageType = message.type();
+void TLS_Handshake_Agent::handle_message(tls::Message_Wrapper message) {    
+    tls::Message_Type message_Type = message.type();
 
-    spdlog::debug("TLS_Handshake_Agent - Received message {}", messageType);
+    spdlog::debug("TLS_Handshake_Agent - Received message {}", message_Type);
 
-    if (messageType == tls::MessageType::CLIENT_HELLO) {
+    if (message_Type == tls::Message_Type::CLIENT_HELLO) {
         receive_client_hello();
 
-    } else if (messageType == tls::MessageType::SERVER_HELLO) {
+    } else if (message_Type == tls::Message_Type::SERVER_HELLO) {
         receive_server_hello(message);
 
-    } else if (messageType == tls::MessageType::CERTIFICATE) {
+    } else if (message_Type == tls::Message_Type::CERTIFICATE) {
         receive_certificate(message);
 
-    } else if (messageType == tls::MessageType::SERVER_HELLO_DONE) {
+    } else if (message_Type == tls::Message_Type::SERVER_HELLO_DONE) {
         receive_server_hello_done();
 
-    } else if (messageType == tls::MessageType::CLIENT_KEY_EXCHANGE) {
+    } else if (message_Type == tls::Message_Type::CLIENT_KEY_EXCHANGE) {
         receive_client_key_exchange(message);
 
-    } else if (messageType == tls::MessageType::CHANGE_CIPHER_SPEC) {
-        partnerEncrypted = true;
+    } else if (message_Type == tls::Message_Type::CHANGE_CIPHER_SPEC) {
+        partner_Encrypted = true;
 
-    } else if (messageType == tls::MessageType::FINISHED) {
-        if (!partnerEncrypted) {
+    } else if (message_Type == tls::Message_Type::FINISHED) {
+        if (!partner_Encrypted) {
             session->send(Messagebuilder::build_abort_message());
             throw std::runtime_error("TLS_Handshake_Agent::handle_message() - Partner did not send ChangeCipherSpec");
         }
         receive_finished(message);
         
-    } else if (messageType == tls::MessageType::ABORT) {
-        currentState = State::UNSECURED;
+    } else if (message_Type == tls::Message_Type::ABORT) {
+        current_State = State::UNSECURED;
         throw new std::runtime_error("TLS_Handshake_Agent::handle_message() - TLS connection aborted");
     } else {
-        spdlog::error("Unknown message type: {}", messageType);
+        spdlog::error("Unknown message type: {}", message_Type);
     }
 }
 
@@ -69,12 +69,12 @@ void TLS_Handshake_Agent::receive_client_hello() {
     spdlog::info("Received client hello");
 
     // Send Client what prime group to use
-    session->send(Messagebuilder::build_server_hello_message(primeGroup));
+    session->send(Messagebuilder::build_server_hello_message(prime_Group));
 
     // Calculate server public and private key
     G = std::make_shared<BigInt>(0);
     P = std::make_shared<BigInt>(0);
-    TLS_Handshake_Agent::read_primes_json("../modp_primes.json", primeGroup, *G, *P);
+    TLS_Handshake_Agent::read_primes_json("../modp_primes.json", prime_Group, *G, *P);
 
     s = std::make_shared<BigInt>(TLS_Handshake_Agent::generate_random_number(1, *P));
     S = std::make_shared<BigInt>(pow(*G, s->to_int()) % *P);
@@ -84,16 +84,16 @@ void TLS_Handshake_Agent::receive_client_hello() {
 
     // Server Done
     session->send(Messagebuilder::build_server_hello_done_message());
-    currentState = State::ESTABLISHING;
+    current_State = State::ESTABLISHING;
 }
 
 
-void TLS_Handshake_Agent::receive_server_hello(tls::MessageWrapper message) {
+void TLS_Handshake_Agent::receive_server_hello(tls::Message_Wrapper message) {
     // Calculate client public and private key
-    primeGroup = message.mutable_server_hello()->prime_group();
+    prime_Group = message.mutable_server_hello()->prime_group();
     G = std::make_shared<BigInt>(0);
     P = std::make_shared<BigInt>(0);
-    TLS_Handshake_Agent::read_primes_json("../modp_primes.json", primeGroup, *G, *P);
+    TLS_Handshake_Agent::read_primes_json("../modp_primes.json", prime_Group, *G, *P);
 
     c = std::make_shared<BigInt>(TLS_Handshake_Agent::generate_random_number(1, *P));
     C = std::make_shared<BigInt>(pow(*G, c->to_int()) % *P);
@@ -101,7 +101,7 @@ void TLS_Handshake_Agent::receive_server_hello(tls::MessageWrapper message) {
 }
 
 
-void TLS_Handshake_Agent::receive_certificate(tls::MessageWrapper message) {
+void TLS_Handshake_Agent::receive_certificate(tls::Message_Wrapper message) {
     // Receive Server public key
     S = std::make_shared<BigInt>(BigInt(message.mutable_certificate()->public_key()));
     spdlog::debug("TLS_Handshake_Agent::handle_message() - Received server public key: {}", S->to_string());
@@ -123,18 +123,18 @@ void TLS_Handshake_Agent::receive_server_hello_done() {
     // Create client protocol
     picosha2::hash256_hex_string(
         "PRIMEGROUP_0|S_" + S->to_string() + "|C_" + C->to_string()
-        , localProtocol
+        , local_Protocol
     );
-    localProtocol.resize(66);
+    local_Protocol.resize(66);
 
     // Client finished
     unsigned long size;
-    std::string encrypted_protocol = TLS_Handshake_Agent::send_message(key->to_string(), size, localProtocol);
+    std::string encrypted_protocol = TLS_Handshake_Agent::send_message(key->to_string(), size, local_Protocol);
     session->send(Messagebuilder::build_finished_message(tls::FinishedType::CLIENT_FINISHED, size, encrypted_protocol));
 }
 
 
-void TLS_Handshake_Agent::receive_client_key_exchange(tls::MessageWrapper message) {
+void TLS_Handshake_Agent::receive_client_key_exchange(tls::Message_Wrapper message) {
     // Receive client public key
     C = std::make_shared<BigInt>(BigInt(message.mutable_client_key_exchange()->public_key()));
     spdlog::debug("TLS_Handshake_Agent::handle_message() - Received client public key: {}", C->to_string());
@@ -145,10 +145,10 @@ void TLS_Handshake_Agent::receive_client_key_exchange(tls::MessageWrapper messag
 }
 
 
-void TLS_Handshake_Agent::receive_finished(tls::MessageWrapper message) {
+void TLS_Handshake_Agent::receive_finished(tls::Message_Wrapper message) {
     // Receive partner protocol (client and server)
-    partnerProtocol = TLS_Handshake_Agent::receive_message(key->to_string(), message.mutable_finished()->size(), message.mutable_finished()->protocol());
-    partnerProtocol.resize(66);
+    partner_Protocol = TLS_Handshake_Agent::receive_message(key->to_string(), message.mutable_finished()->size(), message.mutable_finished()->protocol());
+    partner_Protocol.resize(66);
 
     if (message.mutable_finished()->party() == tls::FinishedType::CLIENT_FINISHED) {         // Server receives client finished
         // Start encrypted communication
@@ -157,28 +157,28 @@ void TLS_Handshake_Agent::receive_finished(tls::MessageWrapper message) {
         // Create server protocol
         picosha2::hash256_hex_string(
             "PRIMEGROUP_0|S_" + S->to_string() + "|C_" + C->to_string()
-            , localProtocol
+            , local_Protocol
         );
-        localProtocol.resize(66);
+        local_Protocol.resize(66);
 
 
         if (check_protocols()) {
             unsigned long size;
-            std::string encrypted_protocol = TLS_Handshake_Agent::send_message(key->to_string(), size, localProtocol);
+            std::string encrypted_protocol = TLS_Handshake_Agent::send_message(key->to_string(), size, local_Protocol);
             session->send(Messagebuilder::build_finished_message(tls::FinishedType::SERVER_FINISHED, size, encrypted_protocol));
             spdlog::info("TLS_Handshake_Agent::handle_message() - TLS connection established");
-            currentState = State::SECURED;
+            current_State = State::SECURED;
         } else {
-            currentState = State::UNSECURED;
+            current_State = State::UNSECURED;
             throw new std::runtime_error("TLS_Handshake_Agent::handle_message() - Protocols do not match");
         }
         
     } else if (message.mutable_finished()->party() == tls::FinishedType::SERVER_FINISHED) {      // Client receives server finished
         if (check_protocols()) {
             spdlog::info("TLS_Handshake_Agent::handle_message() - TLS connection established");
-            currentState = State::SECURED;
+            current_State = State::SECURED;
         } else {
-            currentState = State::UNSECURED;
+            current_State = State::UNSECURED;
             throw new std::runtime_error("TLS_Handshake_Agent::handle_message() - Protocols do not match");
         }
     }
@@ -188,38 +188,38 @@ void TLS_Handshake_Agent::receive_finished(tls::MessageWrapper message) {
 // Public functions
 
 TLS_Handshake_Agent::TLS_Handshake_Agent(std::shared_ptr<Session> session) : session(session) {
-    currentState = State::UNSECURED;
+    current_State = State::UNSECURED;
 }
 
 
-void TLS_Handshake_Agent::notify(tls::MessageWrapper message, unsigned int session_id) {
+void TLS_Handshake_Agent::notify(tls::Message_Wrapper message, unsigned int session_id) {
     spdlog::debug("TLS_Handshake_Agent::notify() - Received message from Session {}", session_id);
-    if (currentState == State::UNSECURED || currentState == State::ESTABLISHING) {
+    if (current_State == State::UNSECURED || current_State == State::ESTABLISHING) {
         handle_message(message);
     }
 }
 
 
 void TLS_Handshake_Agent::initiate_handshake() {
-    if (currentState == SECURED) {
+    if (current_State == SECURED) {
         spdlog::warn("TLS_Handshake_Agent::initiate_handshake() called when TLS connection is already established");
     }
     spdlog::info("Initiating key exchange");
     session->send(Messagebuilder::build_client_hello_message());
-    currentState = ESTABLISHING;
+    current_State = ESTABLISHING;
 }
 
 
 bool TLS_Handshake_Agent::is_secure() const {
-    return currentState == SECURED;
+    return current_State == SECURED;
 }
 
 bool TLS_Handshake_Agent::is_establishing() const {
-    return currentState == ESTABLISHING;
+    return current_State == ESTABLISHING;
 }
 
 void TLS_Handshake_Agent::reconnect() {
-    currentState = UNSECURED;
+    current_State = UNSECURED;
 }     
 
 std::string TLS_Handshake_Agent::get_key() const {

@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package tls;
 
-enum MessageType {
+enum Message_Type {
     // Application data messages
     DATA = 0;
     CLOSE = 1;
@@ -24,8 +24,8 @@ enum FinishedType {
 }
 
 
-message MessageWrapper {
-    MessageType type = 1;
+message Message_Wrapper {
+    Message_Type type = 1;
 
     message ApplicationData {
         uint32 size = 2;

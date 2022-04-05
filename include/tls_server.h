@@ -17,7 +17,7 @@ public:
     TLS_Server(asio::io_context& io_context, int port);
 
 
-    void notify(tls::MessageWrapper message, unsigned int session_id);
+    void notify(tls::Message_Wrapper message, unsigned int session_id);
 
 
     void send(unsigned int session_id, std::string input);

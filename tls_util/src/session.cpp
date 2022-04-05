@@ -7,7 +7,7 @@ void Session::listen_for_messages() {
     spdlog::debug("Session - Listening for messages");
     try {
         while (pipe) {
-            tls::MessageWrapper message;
+            tls::Message_Wrapper message;
             pipe.receive(message);
 
             spdlog::debug("Session - Received message");
@@ -20,7 +20,7 @@ void Session::listen_for_messages() {
 }
 
 
-void Session::notify(tls::MessageWrapper message) {
+void Session::notify(tls::Message_Wrapper message) {
     for (auto observer : observers) {
         observer->notify(message, session_id);
     }
@@ -49,7 +49,7 @@ void Session::start() {
 }
 
 
-void Session::send(tls::MessageWrapper message) {
+void Session::send(tls::Message_Wrapper message) {
     spdlog::debug("Session - Sending message");
     pipe.send(message);
 }

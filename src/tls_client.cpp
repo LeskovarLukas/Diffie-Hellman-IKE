@@ -31,7 +31,7 @@ void TLS_Client::run() {
             std::string input;
             std::getline(std::cin, input);
 
-            tls::MessageWrapper message;
+            tls::Message_Wrapper message;
             if (handshake_agent->is_secure()) {
                 std::string key = handshake_agent->get_key();
                 unsigned long size;
@@ -51,10 +51,10 @@ void TLS_Client::run() {
 }
 
 
-void TLS_Client::notify(tls::MessageWrapper message, unsigned int session_id) {
+void TLS_Client::notify(tls::Message_Wrapper message, unsigned int session_id) {
     spdlog::debug("Client Session {} - Received message type {}", session_id, message.type());
 
-    if (message.type() == tls::MessageType::DATA) {
+    if (message.type() == tls::Message_Type::DATA) {
         if (handshake_agent->is_secure()) {
             std::string key = handshake_agent->get_key();
             unsigned long size = message.application_data().size();

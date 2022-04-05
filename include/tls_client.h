@@ -22,5 +22,5 @@ public:
     void run();
 
 
-    void notify(tls::MessageWrapper message, unsigned int session_id);
+    void notify(tls::Message_Wrapper message, unsigned int session_id);
 };

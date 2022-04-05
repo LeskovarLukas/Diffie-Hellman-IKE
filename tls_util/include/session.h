@@ -15,7 +15,7 @@ private:
 
     void listen_for_messages();
 
-    void notify(tls::MessageWrapper message);
+    void notify(tls::Message_Wrapper message);
 
 public:
     Session(asio::ip::tcp::socket socket, unsigned int session_id);
@@ -24,7 +24,7 @@ public:
 
     void start();
 
-    void send(tls::MessageWrapper message);
+    void send(tls::Message_Wrapper message);
 
 
     void subscribe(TLS_Observer_ptr observer);

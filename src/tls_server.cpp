@@ -37,10 +37,10 @@ TLS_Server::TLS_Server(asio::io_context& io_context, int port):
 }
 
 
-void TLS_Server::notify(tls::MessageWrapper message, unsigned int session_id) {
+void TLS_Server::notify(tls::Message_Wrapper message, unsigned int session_id) {
     spdlog::debug("Server Session {} - Received message type {}", session_id, message.type());
 
-    if (message.type() == tls::MessageType::DATA) {
+    if (message.type() == tls::Message_Type::DATA) {
         std::shared_ptr<TLS_Handshake_Agent> handshake_agent = handshake_agents.at(session_id);
 
         if (handshake_agent->is_secure()) {
@@ -70,10 +70,10 @@ void TLS_Server::send(unsigned int session_id, std::string input) {
         std::string key = handshake_agent->get_key();
         unsigned long size;
         std::string encrypted_message = TLS_Handshake_Agent::send_message(key, size, input);
-        tls::MessageWrapper message = Messagebuilder::build_application_message(size, encrypted_message);
+        tls::Message_Wrapper message = Messagebuilder::build_application_message(size, encrypted_message);
         session->send(message);
     } else {
-        tls::MessageWrapper message = Messagebuilder::build_application_message(input.size(), input);
+        tls::Message_Wrapper message = Messagebuilder::build_application_message(input.size(), input);
         session->send(message);
     }
 }
