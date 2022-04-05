@@ -4,12 +4,12 @@
 #include <json.hpp>
 
 #include "tls_handshake_agent.h"
-#include "PicoSHA2/picosha2.h"
-#include "BigInt/BigInt.hpp"        
+#include "picosha2.h"
+#include "BigInt.hpp"        
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-compare"
-#include "plusaes/plusaes.hpp"
+#include "plusaes.hpp"
 #pragma GCC diagnostic pop
 
 
