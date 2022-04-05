@@ -18,7 +18,7 @@ enum Message_Type {
     ABORT = 9;
 }
 
-enum FinishedType {
+enum Finished_Type {
     CLIENT_FINISHED = 0;
     SERVER_FINISHED = 1;
 }
@@ -81,7 +81,7 @@ message Message_Wrapper {
 
 
     message Finished {
-        FinishedType party = 1;
+        Finished_Type party = 1;
         uint32 size = 2;
         string protocol = 3;
     }

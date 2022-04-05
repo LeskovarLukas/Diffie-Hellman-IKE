@@ -130,7 +130,7 @@ void TLS_Handshake_Agent::receive_server_hello_done() {
     // Client finished
     unsigned long size;
     std::string encrypted_protocol = TLS_Handshake_Agent::send_message(key->to_string(), size, local_Protocol);
-    session->send(Messagebuilder::build_finished_message(tls::FinishedType::CLIENT_FINISHED, size, encrypted_protocol));
+    session->send(Messagebuilder::build_finished_message(tls::Finished_Type::CLIENT_FINISHED, size, encrypted_protocol));
 }
 
 
@@ -150,7 +150,7 @@ void TLS_Handshake_Agent::receive_finished(tls::Message_Wrapper message) {
     partner_Protocol = TLS_Handshake_Agent::receive_message(key->to_string(), message.mutable_finished()->size(), message.mutable_finished()->protocol());
     partner_Protocol.resize(66);
 
-    if (message.mutable_finished()->party() == tls::FinishedType::CLIENT_FINISHED) {         // Server receives client finished
+    if (message.mutable_finished()->party() == tls::Finished_Type::CLIENT_FINISHED) {         // Server receives client finished
         // Start encrypted communication
         session->send(Messagebuilder::build_change_cipher_spec_message());
 
@@ -165,7 +165,7 @@ void TLS_Handshake_Agent::receive_finished(tls::Message_Wrapper message) {
         if (check_protocols()) {
             unsigned long size;
             std::string encrypted_protocol = TLS_Handshake_Agent::send_message(key->to_string(), size, local_Protocol);
-            session->send(Messagebuilder::build_finished_message(tls::FinishedType::SERVER_FINISHED, size, encrypted_protocol));
+            session->send(Messagebuilder::build_finished_message(tls::Finished_Type::SERVER_FINISHED, size, encrypted_protocol));
             spdlog::info("TLS_Handshake_Agent::handle_message() - TLS connection established");
             current_State = State::SECURED;
         } else {
@@ -173,7 +173,7 @@ void TLS_Handshake_Agent::receive_finished(tls::Message_Wrapper message) {
             throw new std::runtime_error("TLS_Handshake_Agent::handle_message() - Protocols do not match");
         }
         
-    } else if (message.mutable_finished()->party() == tls::FinishedType::SERVER_FINISHED) {      // Client receives server finished
+    } else if (message.mutable_finished()->party() == tls::Finished_Type::SERVER_FINISHED) {      // Client receives server finished
         if (check_protocols()) {
             spdlog::info("TLS_Handshake_Agent::handle_message() - TLS connection established");
             current_State = State::SECURED;

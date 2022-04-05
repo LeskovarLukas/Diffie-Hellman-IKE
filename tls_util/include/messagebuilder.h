@@ -66,7 +66,7 @@ public:
         return message;
     }
 
-    static tls::Message_Wrapper build_finished_message(tls::FinishedType party, unsigned int size, std::string protocol) {
+    static tls::Message_Wrapper build_finished_message(tls::Finished_Type party, unsigned int size, std::string protocol) {
         tls::Message_Wrapper message;
         message.set_type(tls::Message_Type::FINISHED);
         message.mutable_finished()->set_party(party);
