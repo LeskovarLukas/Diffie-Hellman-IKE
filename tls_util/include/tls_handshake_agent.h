@@ -1,6 +1,7 @@
 #pragma once
 
 #include "session.h"
+
 #include "messagebuilder.h"
 
 class BigInt;

@@ -1,6 +1,6 @@
-#include <spdlog/spdlog.h>
-
 #include "pipe.h"
+
+#include <spdlog/spdlog.h>
 
 
 Pipe::Pipe(asio::ip::tcp::socket socket) {

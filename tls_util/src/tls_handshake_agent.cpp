@@ -1,9 +1,5 @@
-#include <spdlog/spdlog.h>
-#include <vector>
-#include <fstream>
-#include <json.hpp>
-
 #include "tls_handshake_agent.h"
+
 #include "picosha2.h"
 #include "BigInt.hpp"        
 
@@ -12,6 +8,11 @@
 #include "plusaes.hpp"
 #pragma GCC diagnostic pop
 
+#include <spdlog/spdlog.h>
+#include <json.hpp>
+
+#include <vector>
+#include <fstream>
 
 
 bool TLS_Handshake_Agent::check_protocols() {

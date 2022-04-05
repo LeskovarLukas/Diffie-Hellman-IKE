@@ -1,7 +1,9 @@
 #pragma once
 
-#include <asio.hpp>
 #include "Message.pb.h"
+
+#include <asio.hpp>
+
 
 class Pipe {
 private:

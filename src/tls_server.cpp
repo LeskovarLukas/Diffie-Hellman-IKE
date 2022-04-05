@@ -1,6 +1,6 @@
-#include <spdlog/spdlog.h>
-
 #include "tls_server.h"
+
+#include <spdlog/spdlog.h>
 
 
 void TLS_Server::start_accept() {

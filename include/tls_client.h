@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include "session.h"
 #include "tls_handshake_agent.h"
 

@@ -1,8 +1,9 @@
-#include <iostream>
-#include <spdlog/spdlog.h>
+#include "tls_client.h"
 
 #include "CLI11.hpp"
-#include "tls_client.h"
+#include <spdlog/spdlog.h>
+
+#include <iostream>
 
 
 int main(int argc, char* argv[]) {

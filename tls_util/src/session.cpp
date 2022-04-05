@@ -1,6 +1,6 @@
-#include <spdlog/spdlog.h>
-
 #include "session.h"
+
+#include <spdlog/spdlog.h>
 
 
 void Session::listen_for_messages() {
