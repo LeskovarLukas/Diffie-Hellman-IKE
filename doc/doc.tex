@@ -18,13 +18,15 @@
 \graphicspath{{img/}}
 
 \title{Simulation of TLS (42)}
-\author{Leskovar Lukas Andreios (KatNr), 5BHIF}
+\author{Leskovar Lukas Andreios (10), 5BHIF}
 \date{March 2022}
 
 \begin{document}
 
 \begin{titlepage}
-\maketitle
+	\clearpage
+	\maketitle
+	\thispagestyle{empty}
 \end{titlepage}
 
 \tableofcontents
@@ -173,7 +175,15 @@ To notify any main classes of new messages the observer pattern is implemented. 
 	\label{fig:ClassInteraction}
 \end{figure}
 
-\newpage
+\subsection{Interaction}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=.5\textwidth]{UML/Interaction}
+	\caption{This UML Sequence Diagram shows different messages sent between client and server.}
+	\label{fig:Interaction}
+\end{figure}
+
 
 \section{Description of code-blocks}
 
