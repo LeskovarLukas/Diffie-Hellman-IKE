@@ -21,5 +21,11 @@ git clone git@github.com:LeskovarLukas/leskovar_project.git
 ## Build
 ```
 cd build && meson ..
-ninja -j 4
+ninja -j 4              // not recommended for systems with less than 8GB of RAM
+```
+or 
+
+```
+cd build && meson ..
+ninja                   // may take longer
 ```
