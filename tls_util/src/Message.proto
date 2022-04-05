@@ -27,12 +27,12 @@ enum Finished_Type {
 message Message_Wrapper {
     Message_Type type = 1;
 
-    message ApplicationData {
+    message Application_Data {
         uint32 size = 2;
         string data = 3;
     }
 
-    optional ApplicationData application_data = 2;
+    optional Application_Data application_data = 2;
 
 
     message Close {
@@ -41,17 +41,17 @@ message Message_Wrapper {
     optional Close close = 3;
 
 
-    message ClientHello {
+    message Client_Hello {
     }
 
-    optional ClientHello client_hello = 4;
+    optional Client_Hello client_hello = 4;
 
 
-    message ServerHello {
+    message Server_Hello {
         int32 prime_group = 2;
     }
 
-    optional ServerHello server_hello = 5;
+    optional Server_Hello server_hello = 5;
 
 
     message Certificate {
@@ -61,23 +61,23 @@ message Message_Wrapper {
     optional Certificate certificate = 6;
 
 
-    message ServerHelloDone {
+    message Server_Hello_Done {
     }
 
-    optional ServerHelloDone server_hello_done = 7;
+    optional Server_Hello_Done server_hello_done = 7;
 
 
-    message ClientKeyExchange {
+    message Client_Key_Exchange {
         string public_key = 2;
     }
 
-    optional ClientKeyExchange client_key_exchange = 8;
+    optional Client_Key_Exchange client_key_exchange = 8;
 
 
-    message ChangeCipherSpec {
+    message Change_Cipher_Spec {
     }
 
-    optional ChangeCipherSpec change_cipher_spec = 9;
+    optional Change_Cipher_Spec change_cipher_spec = 9;
 
 
     message Finished {

@@ -16,7 +16,7 @@ enum State {
 class TLS_Handshake_Agent: public TLS_Observer, public std::enable_shared_from_this<TLS_Observer> {
 private:
     std::shared_ptr<Session> session;
-    State current_State{State::UNSECURED};
+    State current_state{State::UNSECURED};
 
     // DHKE Parameters
     int prime_Group = 0;
@@ -29,9 +29,9 @@ private:
     std::shared_ptr<BigInt> key;
 
     // Handshake protocol
-    std::string local_Protocol;
-    std::string partner_Protocol;
-    bool partner_Encrypted = false;  //for change cipher spec
+    std::string local_protocol;
+    std::string partner_protocol;
+    bool partner_encrypted = false;  //for change cipher spec
 
 
     // encryption

@@ -15,7 +15,7 @@
 
 
 bool TLS_Handshake_Agent::check_protocols() {
-    if (local_Protocol != partner_Protocol) {
+    if (local_protocol != partner_protocol) {
         spdlog::error("TLS_Handshake_Agent - Protocols do not match");
         session->send(Messagebuilder::build_abort_message());
         return false;
@@ -27,40 +27,40 @@ bool TLS_Handshake_Agent::check_protocols() {
 // Handshake handles
 
 void TLS_Handshake_Agent::handle_message(tls::Message_Wrapper message) {    
-    tls::Message_Type message_Type = message.type();
+    tls::Message_Type message_type = message.type();
 
-    spdlog::debug("TLS_Handshake_Agent - Received message {}", message_Type);
+    spdlog::debug("TLS_Handshake_Agent - Received message {}", message_type);
 
-    if (message_Type == tls::Message_Type::CLIENT_HELLO) {
+    if (message_type == tls::Message_Type::CLIENT_HELLO) {
         receive_client_hello();
 
-    } else if (message_Type == tls::Message_Type::SERVER_HELLO) {
+    } else if (message_type == tls::Message_Type::SERVER_HELLO) {
         receive_server_hello(message);
 
-    } else if (message_Type == tls::Message_Type::CERTIFICATE) {
+    } else if (message_type == tls::Message_Type::CERTIFICATE) {
         receive_certificate(message);
 
-    } else if (message_Type == tls::Message_Type::SERVER_HELLO_DONE) {
+    } else if (message_type == tls::Message_Type::SERVER_HELLO_DONE) {
         receive_server_hello_done();
 
-    } else if (message_Type == tls::Message_Type::CLIENT_KEY_EXCHANGE) {
+    } else if (message_type == tls::Message_Type::CLIENT_KEY_EXCHANGE) {
         receive_client_key_exchange(message);
 
-    } else if (message_Type == tls::Message_Type::CHANGE_CIPHER_SPEC) {
-        partner_Encrypted = true;
+    } else if (message_type == tls::Message_Type::CHANGE_CIPHER_SPEC) {
+        partner_encrypted = true;
 
-    } else if (message_Type == tls::Message_Type::FINISHED) {
-        if (!partner_Encrypted) {
+    } else if (message_type == tls::Message_Type::FINISHED) {
+        if (!partner_encrypted) {
             session->send(Messagebuilder::build_abort_message());
             throw std::runtime_error("TLS_Handshake_Agent::handle_message() - Partner did not send ChangeCipherSpec");
         }
         receive_finished(message);
         
-    } else if (message_Type == tls::Message_Type::ABORT) {
-        current_State = State::UNSECURED;
+    } else if (message_type == tls::Message_Type::ABORT) {
+        current_state = State::UNSECURED;
         throw new std::runtime_error("TLS_Handshake_Agent::handle_message() - TLS connection aborted");
     } else {
-        spdlog::error("Unknown message type: {}", message_Type);
+        spdlog::error("Unknown message type: {}", message_type);
     }
 }
 
@@ -84,7 +84,7 @@ void TLS_Handshake_Agent::receive_client_hello() {
 
     // Server Done
     session->send(Messagebuilder::build_server_hello_done_message());
-    current_State = State::ESTABLISHING;
+    current_state = State::ESTABLISHING;
 }
 
 
@@ -123,13 +123,13 @@ void TLS_Handshake_Agent::receive_server_hello_done() {
     // Create client protocol
     picosha2::hash256_hex_string(
         "PRIMEGROUP_0|S_" + S->to_string() + "|C_" + C->to_string()
-        , local_Protocol
+        , local_protocol
     );
-    local_Protocol.resize(66);
+    local_protocol.resize(66);
 
     // Client finished
     unsigned long size;
-    std::string encrypted_protocol = TLS_Handshake_Agent::send_message(key->to_string(), size, local_Protocol);
+    std::string encrypted_protocol = TLS_Handshake_Agent::send_message(key->to_string(), size, local_protocol);
     session->send(Messagebuilder::build_finished_message(tls::Finished_Type::CLIENT_FINISHED, size, encrypted_protocol));
 }
 
@@ -147,8 +147,8 @@ void TLS_Handshake_Agent::receive_client_key_exchange(tls::Message_Wrapper messa
 
 void TLS_Handshake_Agent::receive_finished(tls::Message_Wrapper message) {
     // Receive partner protocol (client and server)
-    partner_Protocol = TLS_Handshake_Agent::receive_message(key->to_string(), message.mutable_finished()->size(), message.mutable_finished()->protocol());
-    partner_Protocol.resize(66);
+    partner_protocol = TLS_Handshake_Agent::receive_message(key->to_string(), message.mutable_finished()->size(), message.mutable_finished()->protocol());
+    partner_protocol.resize(66);
 
     if (message.mutable_finished()->party() == tls::Finished_Type::CLIENT_FINISHED) {         // Server receives client finished
         // Start encrypted communication
@@ -157,28 +157,28 @@ void TLS_Handshake_Agent::receive_finished(tls::Message_Wrapper message) {
         // Create server protocol
         picosha2::hash256_hex_string(
             "PRIMEGROUP_0|S_" + S->to_string() + "|C_" + C->to_string()
-            , local_Protocol
+            , local_protocol
         );
-        local_Protocol.resize(66);
+        local_protocol.resize(66);
 
 
         if (check_protocols()) {
             unsigned long size;
-            std::string encrypted_protocol = TLS_Handshake_Agent::send_message(key->to_string(), size, local_Protocol);
+            std::string encrypted_protocol = TLS_Handshake_Agent::send_message(key->to_string(), size, local_protocol);
             session->send(Messagebuilder::build_finished_message(tls::Finished_Type::SERVER_FINISHED, size, encrypted_protocol));
             spdlog::info("TLS_Handshake_Agent::handle_message() - TLS connection established");
-            current_State = State::SECURED;
+            current_state = State::SECURED;
         } else {
-            current_State = State::UNSECURED;
+            current_state = State::UNSECURED;
             throw new std::runtime_error("TLS_Handshake_Agent::handle_message() - Protocols do not match");
         }
         
     } else if (message.mutable_finished()->party() == tls::Finished_Type::SERVER_FINISHED) {      // Client receives server finished
         if (check_protocols()) {
             spdlog::info("TLS_Handshake_Agent::handle_message() - TLS connection established");
-            current_State = State::SECURED;
+            current_state = State::SECURED;
         } else {
-            current_State = State::UNSECURED;
+            current_state = State::UNSECURED;
             throw new std::runtime_error("TLS_Handshake_Agent::handle_message() - Protocols do not match");
         }
     }
@@ -188,38 +188,38 @@ void TLS_Handshake_Agent::receive_finished(tls::Message_Wrapper message) {
 // Public functions
 
 TLS_Handshake_Agent::TLS_Handshake_Agent(std::shared_ptr<Session> session) : session(session) {
-    current_State = State::UNSECURED;
+    current_state = State::UNSECURED;
 }
 
 
 void TLS_Handshake_Agent::notify(tls::Message_Wrapper message, unsigned int session_id) {
     spdlog::debug("TLS_Handshake_Agent::notify() - Received message from Session {}", session_id);
-    if (current_State == State::UNSECURED || current_State == State::ESTABLISHING) {
+    if (current_state == State::UNSECURED || current_state == State::ESTABLISHING) {
         handle_message(message);
     }
 }
 
 
 void TLS_Handshake_Agent::initiate_handshake() {
-    if (current_State == SECURED) {
+    if (current_state == SECURED) {
         spdlog::warn("TLS_Handshake_Agent::initiate_handshake() called when TLS connection is already established");
     }
     spdlog::info("Initiating key exchange");
     session->send(Messagebuilder::build_client_hello_message());
-    current_State = ESTABLISHING;
+    current_state = ESTABLISHING;
 }
 
 
 bool TLS_Handshake_Agent::is_secure() const {
-    return current_State == SECURED;
+    return current_state == SECURED;
 }
 
 bool TLS_Handshake_Agent::is_establishing() const {
-    return current_State == ESTABLISHING;
+    return current_state == ESTABLISHING;
 }
 
 void TLS_Handshake_Agent::reconnect() {
-    current_State = UNSECURED;
+    current_state = UNSECURED;
 }     
 
 std::string TLS_Handshake_Agent::get_key() const {
@@ -236,8 +236,8 @@ General Utility Functions
 */
 
 BigInt TLS_Handshake_Agent::generate_random_number(BigInt min, BigInt max) {
-    int randomData = open("/dev/urandom", O_RDONLY);
-    return (randomData % (max - min + 1)) + min;
+    int random_data = open("/dev/urandom", O_RDONLY);
+    return (random_data % (max - min + 1)) + min;
 }
 
 
