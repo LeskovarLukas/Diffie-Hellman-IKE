@@ -18,13 +18,15 @@
 \graphicspath{{img/}}
 
 \title{Simulation of TLS (42)}
-\author{Leskovar Lukas Andreios (KatNr), 5BHIF}
+\author{Leskovar Lukas Andreios (10), 5BHIF}
 \date{March 2022}
 
 \begin{document}
 
 \begin{titlepage}
-\maketitle
+	\clearpage
+	\maketitle
+	\thispagestyle{empty}
 \end{titlepage}
 
 \tableofcontents
@@ -124,7 +126,7 @@ Both parties inform each other that the key exchange is finished. It contains a 
 \subsection{Classes}
 
 \subsubsection{Communication}
-The following classes are utilized by any other part of the application trying to send or receive messages over TCP.
+The following classes are utilized by any part of the application trying to send or receive messages over TCP.
 
 \begin{figure}[H]
 	\centering
@@ -139,6 +141,8 @@ The following classes are utilized by any other part of the application trying t
 	\caption{The MessageBuilder is a utility class consisting of multiple static methods building Protobuf Messages.}
 	\label{fig:Messagebuilder}
 \end{figure}
+
+\pagebreak
 
 \subsubsection{Main Logic}
 To notify any main classes of new messages the observer pattern is implemented. The following classes each implement the TLS\_Observer and get notified by their respective session object once any messages are receives.
@@ -168,12 +172,20 @@ To notify any main classes of new messages the observer pattern is implemented. 
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=.7\textwidth]{UML/ClassInteraction}
+	\includegraphics[width=.9\textwidth]{UML/ClassAssociation}
 	\caption{This UML Class Diagram shows how the different classes of the application are associated to each other.}
-	\label{fig:ClassInteraction}
+	\label{fig:ClassAssociation}
 \end{figure}
 
-\newpage
+\subsection{Interaction}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=.5\textwidth]{UML/Interaction}
+	\caption{This UML Sequence Diagram shows different messages sent between client and server.}
+	\label{fig:Interaction}
+\end{figure}
+
 
 \section{Description of code-blocks}
 
