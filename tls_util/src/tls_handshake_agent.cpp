@@ -24,8 +24,13 @@ bool TLS_Handshake_Agent::check_protocols() {
     return true;
 }
 
+/*
+    Handshake handles
+    
+    many of the following functions do not fully comply with the TLS specification
+    for example the use of client/server randoms, calculation of master secret, etc. is ommited for the sake of simplicity
 
-// Handshake handles
+*/
 
 void TLS_Handshake_Agent::handle_message(tls::Message_Wrapper message) {    
     tls::Message_Type message_type = message.type();
@@ -51,6 +56,7 @@ void TLS_Handshake_Agent::handle_message(tls::Message_Wrapper message) {
         partner_encrypted = true;
 
     } else if (message_type == tls::Message_Type::FINISHED) {
+        // finished is only valid after change cipher spec
         if (!partner_encrypted) {
             session->send(Messagebuilder::build_abort_message());
             throw std::runtime_error("TLS_Handshake_Agent::handle_message() - Partner did not send ChangeCipherSpec");
@@ -80,7 +86,7 @@ void TLS_Handshake_Agent::receive_client_hello() {
     s = std::make_shared<BigInt>(TLS_Handshake_Agent::generate_random_number(1, *P));
     S = std::make_shared<BigInt>(pow(*G, s->to_int()) % *P);
 
-    // Send public key to client
+    // Send public key to client (in spec, this is done in the ServerKeyExchange message)
     session->send(Messagebuilder::build_certificate_message(S->to_string()));
 
     // Server Done
@@ -103,6 +109,7 @@ void TLS_Handshake_Agent::receive_server_hello(tls::Message_Wrapper message) {
 
 
 void TLS_Handshake_Agent::receive_certificate(tls::Message_Wrapper message) {
+    // in spec, this is done in the ServerHelloDone message
     // Receive Server public key
     S = std::make_shared<BigInt>(BigInt(message.mutable_certificate()->public_key()));
     spdlog::debug("TLS_Handshake_Agent::handle_message() - Received server public key: {}", S->to_string());
@@ -121,7 +128,7 @@ void TLS_Handshake_Agent::receive_server_hello_done() {
     // Start encrypted communication
     session->send(Messagebuilder::build_change_cipher_spec_message());
 
-    // Create client protocol
+    // Create client protocol (this does not contain the client random)
     picosha2::hash256_hex_string(
         "PRIMEGROUP_0|S_" + S->to_string() + "|C_" + C->to_string()
         , local_protocol
@@ -155,7 +162,7 @@ void TLS_Handshake_Agent::receive_finished(tls::Message_Wrapper message) {
         // Start encrypted communication
         session->send(Messagebuilder::build_change_cipher_spec_message());
 
-        // Create server protocol
+        // Create server protocol (this does not contain the server random)
         picosha2::hash256_hex_string(
             "PRIMEGROUP_0|S_" + S->to_string() + "|C_" + C->to_string()
             , local_protocol
@@ -206,6 +213,7 @@ void TLS_Handshake_Agent::initiate_handshake() {
         spdlog::warn("TLS_Handshake_Agent::initiate_handshake() called when TLS connection is already established");
     }
     spdlog::info("Initiating key exchange");
+
     session->send(Messagebuilder::build_client_hello_message());
     current_state = ESTABLISHING;
 }

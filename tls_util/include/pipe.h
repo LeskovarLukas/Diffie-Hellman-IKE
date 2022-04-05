@@ -19,7 +19,6 @@ public:
         return socket->is_open();
     }
 
-
     void send(google::protobuf::Message& message);
 
     void receive(google::protobuf::Message& message);
