@@ -1,3 +1,15 @@
+/*
+author: Leskovar Lukas
+matnr: i17057
+file: tls_server.h
+desc: This module runs a server asynchronous listening for incoming connections.
+        Once a connection is established it replies to messages
+date: 2022-04-06
+class: 5b
+catnr: 10
+*/
+
+
 #pragma once
 
 #include "session.h"

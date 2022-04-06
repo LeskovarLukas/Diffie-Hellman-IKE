@@ -1,3 +1,15 @@
+/*
+author: Leskovar Lukas
+matnr: i17057
+file: session.cpp
+desc: See session.h
+date: 2022-04-06
+class: 5b
+catnr: 10
+*/
+
+
+
 #include "session.h"
 
 #include <spdlog/spdlog.h>

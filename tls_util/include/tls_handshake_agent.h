@@ -1,3 +1,15 @@
+/*
+author: Leskovar Lukas
+matnr: i17057
+file: tls_handshake_agent.h
+desc: This module is responsible for handling handshake messages.
+        It also contains utility for encryption and decryption.
+date: 2022-04-06
+class: 5b
+catnr: 10
+*/
+
+
 #pragma once
 
 #include "session.h"

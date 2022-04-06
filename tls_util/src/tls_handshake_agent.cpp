@@ -1,3 +1,15 @@
+/*
+author: Leskovar Lukas
+matnr: i17057
+file: tls_handshake_agent.cpp
+desc: See tls_handshake_agent.h
+date: 2022-04-06
+class: 5b
+catnr: 10
+*/
+
+
+
 #include "tls_handshake_agent.h"
 
 #include "picosha2.h"

@@ -1,3 +1,15 @@
+/*
+author: Leskovar Lukas
+matnr: i17057
+file: tls_client.h
+desc: This modules creates a client and connects to a server.
+        Once the connection is established it sends a message to the server.
+date: 2022-04-06
+class: 5b
+catnr: 10
+*/
+
+
 #pragma once
 
 #include "session.h"

@@ -1,3 +1,14 @@
+/*
+author: Leskovar Lukas
+matnr: i17057
+file: messagebuilder.h
+desc: This header-only class provides utility for building messages.
+date: 2022-04-06
+class: 5b
+catnr: 10
+*/
+
+
 #pragma once
 
 #include "Message.pb.h"

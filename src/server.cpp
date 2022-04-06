@@ -1,3 +1,14 @@
+/*
+author: Leskovar Lukas
+matnr: i17057
+file: server.cpp
+desc: This file contains the main function of the server. It provides a CLI and runs the tls server.
+date: 2022-04-06
+class: 5b
+catnr: 10
+*/
+
+
 #include "tls_server.h"
 
 #include "CLI11.hpp"

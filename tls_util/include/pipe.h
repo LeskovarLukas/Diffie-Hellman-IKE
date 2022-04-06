@@ -1,3 +1,14 @@
+/*
+author: Leskovar Lukas
+matnr: i17057
+file: pipe.h
+desc: This module provides a pipe for communication over TCP.
+date: 2022-04-06
+class: 5b
+catnr: 10
+*/
+
+
 #pragma once
 
 #include "Message.pb.h"

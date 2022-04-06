@@ -1,3 +1,15 @@
+/*
+author: Leskovar Lukas
+matnr: i17057
+file: session.h
+desc: This module provides a session asynchronously listening for incoming messages 
+        and sending messages.
+date: 2022-04-06
+class: 5b
+catnr: 10
+*/
+
+
 #pragma once
 
 #include "pipe.h"

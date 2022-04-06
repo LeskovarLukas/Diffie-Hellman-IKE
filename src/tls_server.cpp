@@ -1,3 +1,14 @@
+/*
+author: Leskovar Lukas
+matnr: i17057
+file: tls_server.cpp
+desc: See tls_server.h
+date: 2022-04-06
+class: 5b
+catnr: 10
+*/
+
+
 #include "tls_server.h"
 
 #include <spdlog/spdlog.h>
