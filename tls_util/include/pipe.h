@@ -22,4 +22,6 @@ public:
     void send(google::protobuf::Message& message);
 
     void receive(google::protobuf::Message& message);
+
+    void close();
 };

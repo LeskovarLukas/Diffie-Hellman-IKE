@@ -25,6 +25,8 @@ public:
 
     void start();
 
+    void close();
+
     void send(tls::Message_Wrapper message);
 
 

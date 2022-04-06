@@ -32,7 +32,13 @@ void Pipe::send(google::protobuf::Message& message) {
 
 void Pipe::receive(google::protobuf::Message& message) {
     u_int64_t message_size;
-    asio::read(*socket, asio::buffer(&message_size, sizeof(message_size)));
+    asio::error_code error;
+    asio::read(*socket, asio::buffer(&message_size, sizeof(message_size)), error);
+
+    if (error == asio::error::eof) {
+        spdlog::debug("Pipe - Socket unexpectedly closed");
+        throw std::runtime_error("Pipe closed");
+    }
 
     asio::streambuf buffer;
     asio::streambuf::mutable_buffers_type bufs = buffer.prepare(message_size);
@@ -43,4 +49,10 @@ void Pipe::receive(google::protobuf::Message& message) {
 
 
     spdlog::debug("Pipe - Received message");
+}
+
+
+void Pipe::close() {
+    spdlog::debug("Pipe - Closing pipe");
+    socket->close();
 }

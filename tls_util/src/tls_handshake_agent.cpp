@@ -17,7 +17,7 @@
 
 bool TLS_Handshake_Agent::check_protocols() {
     if (local_protocol != partner_protocol) {
-        spdlog::error("TLS_Handshake_Agent - Protocols do not match");
+        spdlog::error("TLS_Handshake_Agent::check_protocols() - Protocols do not match");
         session->send(Messagebuilder::build_abort_message());
         return false;
     }
@@ -67,7 +67,7 @@ void TLS_Handshake_Agent::handle_message(tls::Message_Wrapper message) {
         current_state = State::UNSECURED;
         throw new std::runtime_error("TLS_Handshake_Agent::handle_message() - TLS connection aborted");
     } else {
-        spdlog::error("Unknown message type: {}", message_type);
+        spdlog::error("TLS_Handshake_Agent::handle_message() - Unknown message type: {}", message_type);
     }
 }
 
@@ -116,7 +116,7 @@ void TLS_Handshake_Agent::receive_certificate(tls::Message_Wrapper message) {
 
     // calculate shared secret key
     key = std::make_shared<BigInt>(pow(*S, c->to_int()) % *P);
-    spdlog::debug("Master Key: {}", key->to_string());
+    spdlog::debug("TLS_Handshake_Agent::handle_message() - Master Key: {}", key->to_string());
 }
 
 
@@ -149,7 +149,7 @@ void TLS_Handshake_Agent::receive_client_key_exchange(tls::Message_Wrapper messa
 
     // Calculate shared secret key
     key = std::make_shared<BigInt>(pow(*C, s->to_int()) % *P);
-    spdlog::debug("Master Key: {}", key->to_string());
+    spdlog::debug("TLS_Handshake_Agent::handle_message() - Master Key: {}", key->to_string());
 }
 
 
@@ -178,7 +178,6 @@ void TLS_Handshake_Agent::receive_finished(tls::Message_Wrapper message) {
             current_state = State::SECURED;
         } else {
             current_state = State::UNSECURED;
-            throw new std::runtime_error("TLS_Handshake_Agent::handle_message() - Protocols do not match");
         }
         
     } else if (message.mutable_finished()->party() == tls::Finished_Type::SERVER_FINISHED) {      // Client receives server finished
@@ -187,7 +186,6 @@ void TLS_Handshake_Agent::receive_finished(tls::Message_Wrapper message) {
             current_state = State::SECURED;
         } else {
             current_state = State::UNSECURED;
-            throw new std::runtime_error("TLS_Handshake_Agent::handle_message() - Protocols do not match");
         }
     }
 }

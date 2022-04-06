@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
         client->run();
 
     } catch (std::exception& e) {
-        spdlog::error("Client - Exception: {}", e.what());
+        spdlog::error("Client - {}", e.what());
     }
 
     return 0;

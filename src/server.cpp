@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
         io_context.run();
 
     } catch (std::exception& e) {
-        spdlog::error("Server - Exception: {}", e.what());
+        spdlog::error("Server - {}", e.what());
     }
 
     return 0;

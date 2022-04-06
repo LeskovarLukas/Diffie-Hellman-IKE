@@ -56,6 +56,9 @@ void TLS_Server::notify(tls::Message_Wrapper message, unsigned int session_id) {
 
             send(session_id, "Pong: " + message.application_data().data());
         }
+    } else if (message.type() == tls::Message_Type::CLOSE) {
+        spdlog::info("Server Session {} - Received close message", session_id);
+        sessions.at(session_id)->close();
     }
 }
 

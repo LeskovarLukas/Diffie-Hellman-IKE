@@ -32,6 +32,13 @@ void TLS_Client::run() {
             std::getline(std::cin, input);
 
             tls::Message_Wrapper message;
+
+            if (input == "quit") {
+                message = Messagebuilder::build_close_message();
+                session->send(message);
+                break;
+            }
+
             if (handshake_agent->is_secure()) {
                 std::string key = handshake_agent->get_key();
                 unsigned long size;
@@ -42,10 +49,6 @@ void TLS_Client::run() {
             }
             
             session->send(message);
-
-            if (input == "quit") {
-                break;
-            }
         }
     }
 }
@@ -64,5 +67,8 @@ void TLS_Client::notify(tls::Message_Wrapper message, unsigned int session_id) {
             spdlog::warn("Client - Received unsecure message");
             std::cout << "> " << message.application_data().data() << std::endl;
         }
+    } else if (message.type() == tls::Message_Type::CLOSE) {
+        spdlog::info("Client - Received close message");
+        session->close();
     }
 } 
