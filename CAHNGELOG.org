@@ -1,5 +1,7 @@
 * Changelog
 ** [1.0.1] - 2022-04-03
+*** Changed
+- Formatting 
 *** Changed 
 - Fixing errors when compiling everything at once
 *** Added

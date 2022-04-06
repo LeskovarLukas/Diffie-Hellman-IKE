@@ -34,4 +34,7 @@ public:
 
 
     void notify(tls::Message_Wrapper message, unsigned int session_id);
+
+
+    void set_delay(unsigned int delay);
 };

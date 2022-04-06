@@ -83,3 +83,8 @@ void TLS_Client::notify(tls::Message_Wrapper message, unsigned int session_id) {
         session->close();
     }
 } 
+
+
+void TLS_Client::set_delay(unsigned int delay) {
+    session->set_delay(delay);
+}

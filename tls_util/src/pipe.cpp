@@ -14,6 +14,13 @@ catnr: 10
 #include <spdlog/spdlog.h>
 
 
+void Pipe::wait_random() {
+    std::uniform_int_distribution<> dis(0, delay);
+    int wait = dis(gen);
+    std::this_thread::sleep_for(std::chrono::milliseconds(wait));
+}
+
+
 Pipe::Pipe(asio::ip::tcp::socket socket) {
     GOOGLE_PROTOBUF_VERIFY_VERSION;
     spdlog::debug("Pipe - Creating pipe");
@@ -29,6 +36,8 @@ Pipe::~Pipe() {
 
 
 void Pipe::send(google::protobuf::Message& message) {
+    wait_random();
+
     u_int64_t message_size{message.ByteSizeLong()};
     asio::write(*socket, asio::buffer(&message_size, sizeof(message_size)));
 
@@ -66,4 +75,9 @@ void Pipe::receive(google::protobuf::Message& message) {
 void Pipe::close() {
     spdlog::debug("Pipe - Closing pipe");
     socket->close();
+}
+
+
+void Pipe::set_delay(unsigned int delay) {
+    this->delay = delay;
 }

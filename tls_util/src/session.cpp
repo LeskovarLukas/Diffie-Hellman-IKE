@@ -87,3 +87,8 @@ void Session::unsubscribe(TLS_Observer_ptr observer) {
 unsigned int Session::get_session_id() const {
     return session_id;
 }
+
+
+void Session::set_delay(unsigned int delay) {
+    pipe.set_delay(delay);
+}

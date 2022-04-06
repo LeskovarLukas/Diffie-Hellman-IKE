@@ -48,4 +48,7 @@ public:
 
 
     unsigned int get_session_id() const;
+
+
+    void set_delay(unsigned int delay);
 };
