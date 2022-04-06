@@ -1,3 +1,15 @@
+/*
+author: Leskovar Lukas
+matnr: i17057
+file: tls_server.h
+desc: This module runs a server asynchronous listening for incoming connections.
+        Once a connection is established it replies to messages
+date: 2022-04-06
+class: 5b
+catnr: 10
+*/
+
+
 #pragma once
 
 #include "session.h"
@@ -17,7 +29,7 @@ public:
     TLS_Server(asio::io_context& io_context, int port);
 
 
-    void notify(tls::MessageWrapper message, unsigned int session_id);
+    void notify(tls::Message_Wrapper message, unsigned int session_id);
 
 
     void send(unsigned int session_id, std::string input);

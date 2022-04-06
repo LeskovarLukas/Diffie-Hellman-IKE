@@ -1,5 +1,16 @@
-#pragma once
+/*
+author: Leskovar Lukas
+matnr: i17057
+file: tls_client.h
+desc: This modules creates a client and connects to a server.
+        Once the connection is established it sends a message to the server.
+date: 2022-04-06
+class: 5b
+catnr: 10
+*/
 
+
+#pragma once
 
 #include "session.h"
 #include "tls_handshake_agent.h"
@@ -22,5 +33,8 @@ public:
     void run();
 
 
-    void notify(tls::MessageWrapper message, unsigned int session_id);
+    void notify(tls::Message_Wrapper message, unsigned int session_id);
+
+
+    void set_delay(unsigned int delay);
 };

@@ -1,6 +1,19 @@
+/*
+author: Leskovar Lukas
+matnr: i17057
+file: session.h
+desc: This module provides a session asynchronously listening for incoming messages 
+        and sending messages.
+date: 2022-04-06
+class: 5b
+catnr: 10
+*/
+
+
 #pragma once
 
 #include "pipe.h"
+
 #include "tls_observer.h"
 
 
@@ -15,7 +28,7 @@ private:
 
     void listen_for_messages();
 
-    void notify(tls::MessageWrapper message);
+    void notify(tls::Message_Wrapper message);
 
 public:
     Session(asio::ip::tcp::socket socket, unsigned int session_id);
@@ -24,7 +37,9 @@ public:
 
     void start();
 
-    void send(tls::MessageWrapper message);
+    void close();
+
+    void send(tls::Message_Wrapper message);
 
 
     void subscribe(TLS_Observer_ptr observer);
@@ -33,4 +48,7 @@ public:
 
 
     unsigned int get_session_id() const;
+
+
+    void set_delay(unsigned int delay);
 };

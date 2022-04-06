@@ -1,8 +1,20 @@
-#include <iostream>
-#include <spdlog/spdlog.h>
+/*
+author: Leskovar Lukas
+matnr: i17057
+file: server.cpp
+desc: This file contains the main function of the server. It provides a CLI and runs the tls server.
+date: 2022-04-06
+class: 5b
+catnr: 10
+*/
+
+
+#include "tls_server.h"
 
 #include "CLI11.hpp"
-#include "tls_server.h"
+#include <spdlog/spdlog.h>
+
+#include <iostream>
 
 
 int main(int argc, char* argv[]) {
@@ -36,7 +48,7 @@ int main(int argc, char* argv[]) {
         io_context.run();
 
     } catch (std::exception& e) {
-        spdlog::error("Server - Exception: {}", e.what());
+        spdlog::error("Server - {}", e.what());
     }
 
     return 0;

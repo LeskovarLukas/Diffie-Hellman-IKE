@@ -1,8 +1,19 @@
-#include <spdlog/spdlog.h>
-#include <iostream>
+/*
+author: Leskovar Lukas
+matnr: i17057
+file: tls_client.cpp
+desc: See tls_client.h
+date: 2022-04-06
+class: 5b
+catnr: 10
+*/
+
 
 #include "tls_client.h"
-#include "messagebuilder.h"
+
+#include <spdlog/spdlog.h>
+
+#include <iostream>
 
 
 TLS_Client::TLS_Client(asio::io_context& io_context, std::string host, std::string port):
@@ -31,7 +42,14 @@ void TLS_Client::run() {
             std::string input;
             std::getline(std::cin, input);
 
-            tls::MessageWrapper message;
+            tls::Message_Wrapper message;
+
+            if (input == "quit") {
+                message = Messagebuilder::build_close_message();
+                session->send(message);
+                break;
+            }
+
             if (handshake_agent->is_secure()) {
                 std::string key = handshake_agent->get_key();
                 unsigned long size;
@@ -42,19 +60,15 @@ void TLS_Client::run() {
             }
             
             session->send(message);
-
-            if (input == "quit") {
-                break;
-            }
         }
     }
 }
 
 
-void TLS_Client::notify(tls::MessageWrapper message, unsigned int session_id) {
+void TLS_Client::notify(tls::Message_Wrapper message, unsigned int session_id) {
     spdlog::debug("Client Session {} - Received message type {}", session_id, message.type());
 
-    if (message.type() == tls::MessageType::DATA) {
+    if (message.type() == tls::Message_Type::DATA) {
         if (handshake_agent->is_secure()) {
             std::string key = handshake_agent->get_key();
             unsigned long size = message.application_data().size();
@@ -64,5 +78,13 @@ void TLS_Client::notify(tls::MessageWrapper message, unsigned int session_id) {
             spdlog::warn("Client - Received unsecure message");
             std::cout << "> " << message.application_data().data() << std::endl;
         }
+    } else if (message.type() == tls::Message_Type::CLOSE) {
+        spdlog::info("Client - Received close message");
+        session->close();
     }
 } 
+
+
+void TLS_Client::set_delay(unsigned int delay) {
+    session->set_delay(delay);
+}
