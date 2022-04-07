@@ -14,6 +14,7 @@ catnr: 10
 
 #include "session.h"
 #include "tls_handshake_agent.h"
+#include "ping_agent.h"
 
 
 class TLS_Client: public TLS_Observer, public std::enable_shared_from_this<TLS_Observer> {
@@ -24,6 +25,7 @@ private:
     asio::ip::tcp::resolver::results_type endpoints;
     std::shared_ptr<Session> session;
     std::shared_ptr<TLS_Handshake_Agent> handshake_agent;
+    std::shared_ptr<Ping_Agent> ping_agent;
 
 
 public: 
