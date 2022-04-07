@@ -64,6 +64,9 @@ void Session::start() {
 void Session::close() {
     spdlog::debug("Session {} - Closing session", session_id);
     pipe.close();
+    for (auto observer : observers) {
+        observers.erase(std::remove(observers.begin(), observers.end(), observer), observers.end());
+    }
 }
 
 

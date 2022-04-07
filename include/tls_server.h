@@ -24,11 +24,12 @@ private:
     std::vector<std::shared_ptr<Session>> sessions;
     std::vector<std::shared_ptr<TLS_Handshake_Agent>> handshake_agents;
     std::vector<std::shared_ptr<Ping_Agent>> ping_agents;
+    unsigned int timeout;
 
     void start_accept();
 
 public:
-    TLS_Server(asio::io_context& io_context, int port);
+    TLS_Server(asio::io_context& io_context, int port, unsigned int timeout);
 
 
     void notify(tls::Message_Wrapper message, unsigned int session_id);
