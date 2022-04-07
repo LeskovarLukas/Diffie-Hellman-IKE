@@ -47,6 +47,11 @@ bool TLS_Handshake_Agent::check_protocols() {
 void TLS_Handshake_Agent::handle_message(tls::Message_Wrapper message) {    
     tls::Message_Type message_type = message.type();
 
+    if (message_type == tls::Message_Type::DATA || message_type == tls::Message_Type::CLOSE
+        || message_type == tls::Message_Type::PING || message_type == tls::Message_Type::PING_RESPONSE) {
+        return;
+    }
+
     spdlog::debug("TLS_Handshake_Agent - Received message {}", message_type);
 
     if (message_type == tls::Message_Type::CLIENT_HELLO) {

@@ -16,6 +16,10 @@ enum Message_Type {
     CHANGE_CIPHER_SPEC = 7;
     FINISHED = 8;
     ABORT = 9;
+
+    // Ping messages
+    PING = 10;
+    PING_RESPONSE = 11;
 }
 
 enum Finished_Type {
@@ -93,4 +97,16 @@ message Message_Wrapper {
     }
 
     optional Abort abort = 11;
+
+
+    message Ping {
+    }
+
+    optional Ping ping = 12;
+
+    
+    message Ping_Response {
+    }
+    
+    optional Ping_Response ping_response = 13;
 }

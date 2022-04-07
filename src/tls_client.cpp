@@ -29,6 +29,9 @@ TLS_Client::TLS_Client(asio::io_context& io_context, std::string host, std::stri
 
     handshake_agent = std::make_shared<TLS_Handshake_Agent>(session);
     session->subscribe(handshake_agent);
+
+    ping_agent = std::make_shared<Ping_Agent>(session);
+    session->subscribe(ping_agent);
 }
 
 

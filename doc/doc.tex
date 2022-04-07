@@ -163,10 +163,18 @@ To notify any main classes of new messages the observer pattern is implemented. 
 
 \begin{figure}[H]
 	\centering
+	\includegraphics[width=.7\textwidth]{UML/PingAgent}
+	\caption{This Diagram shows the class structure for the Ping Agent responsible for detecting timeouts of clients.}
+	\label{fig:PingAgent}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
 	\includegraphics[width=.7\textwidth]{UML/HandshakeAgent}
 	\caption{The TLS\_Handshake\_Agent handles any key exchange messages. It also contains  utility methods for encrypting/decrypting messages.}
 	\label{fig:HandshakeAgent}
 \end{figure}
+
 
 \subsection{Class Association}
 
@@ -409,6 +417,8 @@ The Diffie-Hellman IKE uses large integer values which are not supported in stan
 
 \subsection{Command Line Arguments}
 
+\subsubsection{Client}
+
 \paragraph{-n, --hostname}
 Hostname of the server (default: localhost)
 
@@ -421,6 +431,23 @@ The port of the server (default: 4433)
 \paragraph{-l, --log-level}
 Log-Level of the application (default: info)
 
+\paragraph{-d, --delay}
+Delay for sending messages (default: 0)
+
+
+\subsubsection{Server}
+
+%\paragraph{-i, --ip}
+%IPv4 address of the server (to be preferred over hostname)
+
+\paragraph{-p, --port}
+The port of the server (default: 4433)
+
+\paragraph{-l, --log-level}
+Log-Level of the application (default: info)
+
+\paragraph{-t, --timeout}
+Waiting time for Ping Agent until session gets cancelled (default: 10000)
 
 \newpage
 

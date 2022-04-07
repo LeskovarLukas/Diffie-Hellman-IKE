@@ -35,6 +35,10 @@ public:
 
     ~Session();
 
+    operator bool() {
+        return pipe;
+    }
+
     void start();
 
     void close();
