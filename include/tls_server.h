@@ -14,6 +14,7 @@ catnr: 10
 
 #include "session.h"
 #include "tls_handshake_agent.h"
+#include "ping_agent.h"
 
 
 class TLS_Server: public TLS_Observer, public std::enable_shared_from_this<TLS_Observer> {
@@ -22,6 +23,7 @@ private:
     asio::ip::tcp::acceptor acceptor;
     std::vector<std::shared_ptr<Session>> sessions;
     std::vector<std::shared_ptr<TLS_Handshake_Agent>> handshake_agents;
+    std::vector<std::shared_ptr<Ping_Agent>> ping_agents;
 
     void start_accept();
 

@@ -30,6 +30,11 @@ void TLS_Server::start_accept() {
                 new_session->subscribe(new_handshake_agent);
                 handshake_agents.push_back(new_handshake_agent);
 
+                auto new_ping_agent = std::make_shared<Ping_Agent>(new_session, 10000);
+                new_session->subscribe(new_ping_agent);
+                ping_agents.push_back(new_ping_agent);
+                new_ping_agent->run();
+
 
                 start_accept();
             } else {

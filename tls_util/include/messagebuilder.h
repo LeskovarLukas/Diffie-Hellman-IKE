@@ -93,4 +93,18 @@ public:
 
         return message;
     }
+
+    static tls::Message_Wrapper build_ping_message() {
+        tls::Message_Wrapper message;
+        message.set_type(tls::Message_Type::PING);
+
+        return message;
+    }
+
+    static tls::Message_Wrapper build_ping_response_message() {
+        tls::Message_Wrapper message;
+        message.set_type(tls::Message_Type::PING_RESPONSE);
+
+        return message;
+    }
 };
