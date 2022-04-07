@@ -1,4 +1,12 @@
 * Changelog
+** [2.0.0] - 2022-04-07
+*** Changed
+- Pipe to wait delay before sending messages
+- functionality for closing sessions/pipes
+- documentation
+*** Added
+- Ping class responsible for detecting timeouts
+- CLI parameters for delay and timeout
 ** [1.0.1] - 2022-04-03
 *** Changed
 - Formatting 
