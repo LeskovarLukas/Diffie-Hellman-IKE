@@ -1,3 +1,13 @@
+/*
+author: Leskovar Lukas
+matnr: i17057
+file: ping_agent.cpp
+desc: This module provides a pipe for communication over TCP.
+date: 2022-04-06
+class: 5b
+catnr: 10
+*/
+
 #include "ping_agent.h"
 
 #include "messagebuilder.h"
