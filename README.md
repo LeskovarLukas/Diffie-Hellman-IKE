@@ -29,3 +29,14 @@ or
 cd build && meson ..
 ninja                   // may take longer
 ```
+
+## Run
+First start the server:
+```
+./tls_server -p 4433 -t 10000 -l info
+```
+
+Then you may have multiple clients connect to the server:
+```
+./tls_client -n localhost -p 4433 -d 0 -l info
+
