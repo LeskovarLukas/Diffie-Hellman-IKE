@@ -34,7 +34,9 @@ void Session::listen_for_messages() {
 
 void Session::notify(tls::Message_Wrapper message) {
     for (auto observer : observers) {
-        observer->notify(message, session_id);
+        if (observer != nullptr) {
+            observer->notify(message, session_id);
+        }
     }
 }
 
