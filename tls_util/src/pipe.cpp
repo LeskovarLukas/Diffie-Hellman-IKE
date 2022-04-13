@@ -56,19 +56,22 @@ void Pipe::receive(google::protobuf::Message& message) {
     asio::read(*socket, asio::buffer(&message_size, sizeof(message_size)), error);
 
     if (error == asio::error::eof) {
-        spdlog::debug("Pipe - Socket unexpectedly closed");
+        spdlog::debug("Pipe - Socket closed");
         throw std::runtime_error("Pipe closed");
+    } else if (message_size == 0) {
+        spdlog::debug("Pipe - Received empty message");
+        throw std::runtime_error("Received empty message");
+    } else {
+        asio::streambuf buffer;
+        asio::streambuf::mutable_buffers_type bufs = buffer.prepare(message_size);
+        buffer.commit(asio::read(*socket, bufs));
+
+        std::istream is(&buffer);
+        message.ParseFromIstream(&is);
+
+
+        spdlog::debug("Pipe - Received message");
     }
-
-    asio::streambuf buffer;
-    asio::streambuf::mutable_buffers_type bufs = buffer.prepare(message_size);
-    buffer.commit(asio::read(*socket, bufs));
-
-    std::istream is(&buffer);
-    message.ParseFromIstream(&is);
-
-
-    spdlog::debug("Pipe - Received message");
 }
 
 

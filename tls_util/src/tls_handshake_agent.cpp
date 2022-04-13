@@ -52,7 +52,7 @@ void TLS_Handshake_Agent::handle_message(tls::Message_Wrapper message) {
         return;
     }
 
-    spdlog::debug("TLS_Handshake_Agent - Received message {}", message_type);
+    spdlog::debug("TLS_Handshake_Agent::handle_message() - Received message {}", message_type);
 
     if (message_type == tls::Message_Type::CLIENT_HELLO) {
         receive_client_hello();
@@ -90,25 +90,30 @@ void TLS_Handshake_Agent::handle_message(tls::Message_Wrapper message) {
 
 
 void TLS_Handshake_Agent::receive_client_hello() {
-    spdlog::info("Received client hello");
+    try {
+        spdlog::info("Received client hello");
 
-    // Send Client what prime group to use
-    session->send(Messagebuilder::build_server_hello_message(prime_Group));
+        // Send Client what prime group to use
+        session->send(Messagebuilder::build_server_hello_message(prime_Group));
 
-    // Calculate server public and private key
-    G = std::make_shared<BigInt>(0);
-    P = std::make_shared<BigInt>(0);
-    TLS_Handshake_Agent::read_primes_json("../modp_primes.json", prime_Group, *G, *P);
+        // Calculate server public and private key
+        G = std::make_shared<BigInt>(0);
+        P = std::make_shared<BigInt>(0);
+        TLS_Handshake_Agent::read_primes_json("../modp_primes.json", prime_Group, *G, *P);
 
-    s = std::make_shared<BigInt>(TLS_Handshake_Agent::generate_random_number(1, *P));
-    S = std::make_shared<BigInt>(pow(*G, s->to_int()) % *P);
+        s = std::make_shared<BigInt>(TLS_Handshake_Agent::generate_random_number(1, *P));
+        S = std::make_shared<BigInt>(pow(*G, s->to_int()) % *P);
 
-    // Send public key to client (in spec, this is done in the ServerKeyExchange message)
-    session->send(Messagebuilder::build_certificate_message(S->to_string()));
+        // Send public key to client (in spec, this is done in the ServerKeyExchange message)
+        session->send(Messagebuilder::build_certificate_message(S->to_string()));
 
-    // Server Done
-    session->send(Messagebuilder::build_server_hello_done_message());
-    current_state = State::ESTABLISHING;
+        // Server Done
+        session->send(Messagebuilder::build_server_hello_done_message());
+        current_state = State::ESTABLISHING;
+    } catch (std::exception& e) {
+        session->send(Messagebuilder::build_abort_message());
+        current_state = State::UNSECURED;
+    }
 }
 
 
@@ -268,8 +273,8 @@ BigInt TLS_Handshake_Agent::generate_random_number(BigInt min, BigInt max) {
 void TLS_Handshake_Agent::read_primes_json(std::string filename, int id, BigInt& g, BigInt& p) {
     std::ifstream file(filename);
     if (!file.is_open()) {
-        std::cout << "Error opening file" << std::endl;
-        return;                      
+        spdlog::critical("TLS_Handshake_Agent::read_primes_json() - Error opening file {}", filename);
+        throw std::runtime_error("Error opening file");
     }
     nlohmann::json primes;
     file >> primes;

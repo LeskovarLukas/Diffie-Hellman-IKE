@@ -35,6 +35,11 @@ TLS_Client::TLS_Client(asio::io_context& io_context, std::string host, std::stri
 }
 
 
+TLS_Client::~TLS_Client() {
+    spdlog::info("Client - Disconnected");
+}
+
+
 void TLS_Client::run() {
     session->subscribe(shared_from_this());
 
@@ -50,6 +55,7 @@ void TLS_Client::run() {
             if (input == "quit") {
                 message = Messagebuilder::build_close_message();
                 session->send(message);
+                session->close();
                 break;
             }
 

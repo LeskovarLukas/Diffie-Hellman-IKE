@@ -12,7 +12,7 @@ catnr: 10
 #include "tls_observer.h"
 
 
-class Ping_Agent : public TLS_Observer {
+class Ping_Agent : public TLS_Observer, public std::enable_shared_from_this<TLS_Observer> {
 private:
     std::shared_ptr<Session> session;
     unsigned int timeout;
