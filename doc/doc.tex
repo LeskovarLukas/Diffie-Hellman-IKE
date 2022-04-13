@@ -42,7 +42,7 @@ TLS 1.1, released in 2006, did not propose many security upgrades compared to ve
 In 2018 the newest version 1.3 was implemented to reduce overhead and improve security once more. \cite{cloudflareTLS}
 
 \subsection{Key Generation}
-To create secure keys for symmetric encryption TLS implements the Diffie-Hellman Key Agreement Method. This requires both parties to generate a public $P$ and private/secret $S$ key based on agreed upon parameters $g$, $p$ and $q$, as seen in Equation \ref{keyDerivation}. The parameters $p$ and $q$ are very large prime numbers linked to the relatively small generator number $g$ so that $g^{q}\ \mathrm{mod}\ p = 1$. The private key for each participant is random for each key exchange. \cite{dierks1999rfc2246}
+To create secure keys for symmetric encryption TLS implements the Diffie-Hellman Key Agreement Method. This requires both parties to generate a public $P$ and private/secret $S$ key based on agreed upon parameters $g$, $p$ and $q$. The parameters $p$ and $q$ are very large prime numbers linked to the relatively small generator number $g$ so that $g^{q}\ \mathrm{mod}\ p = 1$. The private key for each participant is random for each key exchange. Equation \ref{keyDerivation} shows how the public key is derived. \cite{dierks1999rfc2246}
 
 \begin{equation}\label{keyDerivation}
 	P = g^{ \ S}\ \mathrm{mod}\ p
