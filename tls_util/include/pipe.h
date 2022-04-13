@@ -36,9 +36,6 @@ public:
 
     ~Pipe();
 
-
-    
-
     void send_message(google::protobuf::Message& message);
 
     void receive(google::protobuf::Message& message);
