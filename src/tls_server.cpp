@@ -35,7 +35,6 @@ void TLS_Server::start_accept() {
                 ping_agents.push_back(new_ping_agent);
                 new_ping_agent->run();
 
-
                 start_accept();
             } else {
                 spdlog::error("Server - Error accepting connection: {}", ec.message());
@@ -53,6 +52,16 @@ TLS_Server::TLS_Server(asio::io_context& io_context, int port, unsigned int time
     start_accept();
 }
 
+TLS_Server::~TLS_Server() {
+    for (auto session : sessions) {
+        if (session) {
+            tls::Message_Wrapper message = Messagebuilder::build_close_message();
+            session->send(message);
+            session->close();
+        }     
+    }
+}
+
 
 void TLS_Server::notify(tls::Message_Wrapper message, unsigned int session_id) {
     spdlog::debug("Server Session {} - Received message type {}", session_id, message.type());
@@ -66,12 +75,12 @@ void TLS_Server::notify(tls::Message_Wrapper message, unsigned int session_id) {
             std::string decrypted_message = TLS_Handshake_Agent::receive_message(key, size, message.application_data().data());
             std::cout << "Session " << session_id << " > " << decrypted_message << std::endl;
 
-            send(session_id, "Pong: " + decrypted_message);
+            send(session_id, "Server: " + decrypted_message);
         } else {
             spdlog::warn("Server - Received unsecure message");
             std::cout << "Session " << session_id << " > " << message.application_data().data() << std::endl;
 
-            send(session_id, "Pong: " + message.application_data().data());
+            send(session_id, "Server: " + message.application_data().data());
         }
     } else if (message.type() == tls::Message_Type::CLOSE) {
         spdlog::info("Server Session {} - Received close message", session_id);

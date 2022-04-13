@@ -31,6 +31,8 @@ private:
 public:
     TLS_Server(asio::io_context& io_context, int port, unsigned int timeout);
 
+    ~TLS_Server();
+
 
     void notify(tls::Message_Wrapper message, unsigned int session_id);
 

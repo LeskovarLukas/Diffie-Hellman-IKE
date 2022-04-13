@@ -31,6 +31,8 @@ private:
 public: 
     TLS_Client(asio::io_context& io_context, std::string host, std::string port);
 
+    ~TLS_Client();
+
 
     void run();
 
