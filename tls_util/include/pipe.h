@@ -24,7 +24,11 @@ private:
     std::random_device rd;
     std::mt19937 gen{rd()};
 
+    std::mutex mtx;
+
     void wait_random();
+
+    void send(google::protobuf::Message& message);
 
 public:
     Pipe(asio::ip::tcp::socket socket);
@@ -33,10 +37,11 @@ public:
 
 
     operator bool() {
+        std::lock_guard<std::mutex> lock(mtx);
         return socket->is_open();
     }
 
-    void send(google::protobuf::Message& message);
+    void send_message(google::protobuf::Message& message);
 
     void receive(google::protobuf::Message& message);
 

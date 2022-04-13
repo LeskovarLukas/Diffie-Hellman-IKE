@@ -21,6 +21,21 @@ void Pipe::wait_random() {
 }
 
 
+void Pipe::send(google::protobuf::Message& message) {
+    wait_random();
+    std::lock_guard<std::mutex> lock(mtx);
+    u_int64_t message_size{message.ByteSizeLong()};
+    asio::write(*socket, asio::buffer(&message_size, sizeof(message_size)));
+
+    asio::streambuf buffer;
+    std::ostream os(&buffer);
+    message.SerializeToOstream(&os);
+    asio::write(*socket, buffer);
+
+    spdlog::debug("Pipe - Sent message");
+}
+
+
 Pipe::Pipe(asio::ip::tcp::socket socket) {
     GOOGLE_PROTOBUF_VERIFY_VERSION;
     spdlog::debug("Pipe - Creating pipe");
@@ -35,18 +50,9 @@ Pipe::~Pipe() {
 }
 
 
-void Pipe::send(google::protobuf::Message& message) {
-    wait_random();
-
-    u_int64_t message_size{message.ByteSizeLong()};
-    asio::write(*socket, asio::buffer(&message_size, sizeof(message_size)));
-
-    asio::streambuf buffer;
-    std::ostream os(&buffer);
-    message.SerializeToOstream(&os);
-    asio::write(*socket, buffer);
-
-    spdlog::debug("Pipe - Sent message");
+void Pipe::send_message(google::protobuf::Message& message) {
+    auto send_future = std::async(&Pipe::send, this, std::ref(message));
+    send_future.wait();
 }
 
 

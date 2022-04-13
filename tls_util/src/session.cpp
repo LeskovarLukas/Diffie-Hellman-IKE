@@ -74,7 +74,7 @@ void Session::close() {
 
 
 void Session::send(tls::Message_Wrapper message) {
-    pipe.send(message);
+    pipe.send_message(message);
     spdlog::debug("Session {} - Sent message", session_id);
 }
 

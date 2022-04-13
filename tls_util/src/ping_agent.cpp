@@ -28,7 +28,6 @@ Ping_Agent::~Ping_Agent()
 
 void Ping_Agent::run()
 {
-    std::this_thread::sleep_for(std::chrono::milliseconds(timeout));
     ping_thread = std::thread([this] {
         try {
             while (session && timeout > 0) {
