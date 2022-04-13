@@ -1,4 +1,9 @@
 * Changelog
+** [2.0.1]
+*** Changed
+- Feedback on doc
+- thread synchronization of pipe class
+- closing of ping agent after session closing
 ** [2.0.0] - 2022-04-07
 *** Changed
 - Pipe to wait delay before sending messages
