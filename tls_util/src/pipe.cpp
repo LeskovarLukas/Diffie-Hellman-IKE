@@ -40,6 +40,7 @@ Pipe::Pipe(asio::ip::tcp::socket socket) {
     GOOGLE_PROTOBUF_VERIFY_VERSION;
     spdlog::debug("Pipe - Creating pipe");
     this->socket = std::make_shared<asio::ip::tcp::socket>(std::move(socket));
+    open = true;
 }
 
 
@@ -82,9 +83,17 @@ void Pipe::receive(google::protobuf::Message& message) {
 
 
 void Pipe::close() {
+    std::lock_guard<std::mutex> lock(mtx);
     spdlog::debug("Pipe - Closing pipe");
     socket->close();
+    open = false;
 }
+
+
+bool Pipe::is_open() {
+    return open && socket->is_open();
+}
+
 
 
 void Pipe::set_delay(unsigned int delay) {

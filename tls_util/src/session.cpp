@@ -18,7 +18,7 @@ catnr: 10
 void Session::listen_for_messages() {
     spdlog::debug("Session {}::listen() - Listening for messages", session_id);
     try {
-        while (pipe) {
+        while (pipe.is_open()) {
             tls::Message_Wrapper message;
             pipe.receive(message);
 
@@ -63,19 +63,23 @@ void Session::start() {
 
 
 void Session::close() {
-    spdlog::debug("Session {} - Closing session", session_id);
-    pipe.close();
-    for (auto observer : observers) {
-        if( observer != nullptr) {
-            observers.erase(std::remove(observers.begin(), observers.end(), observer), observers.end());
+    if (pipe.is_open()) {
+        spdlog::debug("Session {} - Closing session", session_id);
+        pipe.close();
+        for (auto observer : observers) {
+            if( observer != nullptr) {
+                observers.erase(std::remove(observers.begin(), observers.end(), observer), observers.end());
+            }
         }
     }
 }
 
 
 void Session::send(tls::Message_Wrapper message) {
-    pipe.send_message(message);
-    spdlog::debug("Session {} - Sent message", session_id);
+    if (pipe.is_open()) {
+        pipe.send_message(message);
+        spdlog::debug("Session {} - Sent message", session_id);
+    }
 }
 
 
@@ -92,6 +96,11 @@ void Session::unsubscribe(TLS_Observer_ptr observer) {
 
 unsigned int Session::get_session_id() const {
     return session_id;
+}
+
+
+bool Session::is_open() {
+    return pipe.is_open();
 }
 
 

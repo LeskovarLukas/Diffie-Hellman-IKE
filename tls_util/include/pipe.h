@@ -21,6 +21,7 @@ class Pipe {
 private:
     std::shared_ptr<asio::ip::tcp::socket> socket;
     unsigned int delay = 0;  // in milliseconds
+    bool open = false;
     std::random_device rd;
     std::mt19937 gen{rd()};
 
@@ -36,10 +37,7 @@ public:
     ~Pipe();
 
 
-    operator bool() {
-        std::lock_guard<std::mutex> lock(mtx);
-        return socket->is_open();
-    }
+    
 
     void send_message(google::protobuf::Message& message);
 
@@ -47,6 +45,7 @@ public:
 
     void close();
 
+    bool is_open();
 
     void set_delay(unsigned int delay);
 };

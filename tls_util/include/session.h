@@ -36,7 +36,7 @@ public:
     ~Session();
 
     operator bool() {
-        return pipe;
+        return pipe.is_open();
     }
 
     void start();
@@ -52,6 +52,8 @@ public:
 
 
     unsigned int get_session_id() const;
+
+    bool is_open();
 
 
     void set_delay(unsigned int delay);
