@@ -1,4 +1,4 @@
-# leskovar_project
+# Diffie Hellman Internet Key Exchange
 [![wakatime](https://wakatime.com/badge/github/LeskovarLukas/leskovar_project.svg)](https://wakatime.com/badge/github/LeskovarLukas/leskovar_project)
 
 Simple project simulating TLS (I guess its Version 1.0)
